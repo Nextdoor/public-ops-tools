@@ -1,0 +1,409 @@
+#!/bin/bash
+#
+# Runs the following pre-commit checks and aborts the commit if there
+# are any failures:
+#
+# * Runs unit tests
+# * Checks for trailing whitespace
+# * Checks line length
+# * Checks Python style with pep8
+# * Checks Python correctness with pyflakes
+# * Checks JavaScript style/correctness with gjslint
+#
+# Note: because there may be unstaged changes in the working directory
+# at commit time, the index is copied to a temporary directory in
+# order to run checks against a pristine snapshot of the repository in
+# the state it would be in just after the commit.
+#
+# Author: jacob@nextdoor.com (Jacob Hesch)
+
+PEP8=~/src/dev-tools/bin/pep8.py
+
+fail=0
+
+
+function usage {
+    cat <<EOF
+Git pre-commit hook
+
+Runs tests and various style and correctness checks for changed files
+in the git index (or the working directory if -W is specified).
+
+Usage: $0 [options]
+Options:
+  -W            Include changed files in the working dir (by
+                   default only index files are considered)
+  -t            Run tests
+  -w            Check for trailing whitespace
+  -l            Check line length
+  -p            Check python style (via pep8)
+  -P            Check python logic (via pyflakes)
+  -j            Check javascript style (via gjslint)
+  -n            Check Nextdoor specific rules
+  -v            Verbose mode
+  -h            Show this message and exit
+
+Note: the default behavior -- if none of -t, -w, -l , -p, -P, -n or -j is
+specified -- is to run all checks as if all of those flags were
+enabled. Specifying at least one of them causes all the others which
+are not specified to be disabled.
+
+EOF
+    exit 1
+}
+
+
+function parse_opts {
+    while getopts "WtwlpPjvhn" OPTION
+    do
+        case $OPTION in
+            W)
+                INCLUDE_WORKING_DIR=1 ;;
+            t)
+                TESTS=1
+                USER_OPTION=1 ;;
+            w)
+                WHITESPACE=1
+                USER_OPTION=1 ;;
+            l)
+                LINE_LENGTH=1
+                USER_OPTION=1 ;;
+            p)
+                PYTHON_STYLE=1
+                USER_OPTION=1 ;;
+            P)
+                PYTHON_LOGIC=1
+                USER_OPTION=1 ;;
+            j)
+                JAVASCRIPT_STYLE=1
+                USER_OPTION=1 ;;
+            n)
+                NEXTDOOR_RULES=1
+                USER_OPTION=1 ;;
+            v)
+                VERBOSE=1 ;;
+            h) usage ;;
+            *) usage ;;
+        esac
+    done
+    shift $(($OPTIND - 1))
+
+    # With no args, run all checks.
+    if [[ -z $USER_OPTION ]]; then
+        TESTS=1
+        WHITESPACE=1
+        LINE_LENGTH=1
+        PYTHON_STYLE=1
+        PYTHON_LOGIC=1
+        JAVASCRIPT_STYLE=1
+        NEXTDOOR_RULES=1
+    fi
+}
+
+
+function setup {
+    if [[ -n $INCLUDE_WORKING_DIR ]]; then
+        working_dir=$(git rev-parse --show-toplevel)
+        nextdoor_app_root=$working_dir/apps/nextdoor
+        files=$(git diff-index --name-only --diff-filter=ACM HEAD)
+        cd $working_dir
+    else
+        # Copy index to a temporary directory.
+        tempdir=$(mktemp -d)
+        git checkout-index --prefix=$tempdir/ -af
+        nextdoor_app_root=$tempdir/apps/nextdoor
+        working_dir=$(git rev-parse --show-toplevel)
+        files=$(git diff-index --cached --name-only --diff-filter=ACM HEAD)
+        cd $tempdir
+    fi
+
+    if [[ -n $VERBOSE ]]; then
+        echo "Files to be checked: $files"
+    fi
+}
+
+
+# Runs Django tests under apps/nextdoor.
+function run_tests_django {
+    pushd $nextdoor_app_root > /dev/null
+
+    local processes=''
+    if (( ${ND_PROCESSES:-0} > 0 )); then
+        processes="--processes=$ND_PROCESSES"
+    fi
+
+    # Run full suite of tests for each changed python file.
+    echo -e "\nRunning unit tests for changed Python files [tests]"
+    ln -sf local_dev.py $nextdoor_app_root/local.py
+    for file in $files; do
+        # Skip non-python files.
+        if [[ ! $file =~ \.py$ ]]; then
+            continue
+        fi
+        if [[ $file =~ _[Tt]ests?.py$ ]]; then
+            test_file=$file
+        else
+            test_file=${file%.py}_test.py
+        fi
+        test_file=${test_file#apps/nextdoor/}
+        # Check whether a _test.py file exists.
+        if [[ -e $test_file ]]; then
+
+            python -W error::RuntimeWarning manage.py test --failfast $processes \
+                $test_file 2>&1 >/dev/null
+            if [[ $? != 0 ]]; then
+                fail=1
+            fi
+        fi
+    done
+
+    popd > /dev/null
+}
+
+
+# Runs tests using nose directly (non-Django tests).
+function run_tests_nose {
+    # Note: Currently there aren't many tests outside of apps/nextdoor
+    # (i.e, non-Django tests), so if any files are changed outside of
+    # that directory, just run them all. When the number of non-Django
+    # tests starts to cause slowness, arrange to run tests only for
+    # changed files like in run_tests_django above.
+    nosetests nd newsfeed
+
+    if [[ $? != 0 ]]; then
+        fail=1
+    fi
+}
+
+
+# Determines which tests need to be run based on modified files.
+function run_tests {
+    if [[ $SKIP =~ "test" ]]; then
+        return
+    fi
+
+    for file in $files; do
+        case $file in
+            apps/nextdoor/*|templates/*)
+                local django_dirty=1 ;;
+            nd/*|newsfeed/*)
+                local nose_dirty=1 ;;
+        esac
+    done
+
+    if [[ -n $django_dirty ]]; then
+        run_tests_django
+    fi
+
+    if [[ -n $nose_dirty ]]; then
+        run_tests_nose
+    fi
+}
+
+
+# Checks each file for trailing whitespace.
+function check_whitespace {
+    if [[ $SKIP =~ "whitespace" ]]; then
+        return
+    fi
+
+    echo -e "\nChecking for trailing whitespace [whitespace]"
+    whitespace_files=()
+    file_extension_pattern='\.(css|html|js|json|py|sh|szl|thrift|txt|yaml|xml)$'
+    for file in $files; do
+        if [[ "$file" =~  $file_extension_pattern ]]; then
+            match=$(grep -q [[:blank:]]$ $file)
+            if [[ $? == 0 ]]; then
+                whitespace_files+=($working_dir/$file)
+                grep -Hn [[:blank:]]$ $file
+                fail=2
+            fi
+        fi
+    done
+    if [[ $fail == 2 ]]; then
+        echo "To remove trailing whitespace:"
+        echo "sed -i -e 's/[ \t]*$//' ${whitespace_files[@]}"
+    else
+        echo "OK"
+    fi
+}
+
+
+# Checks relevant files for line length.
+declare -A MAX_LINE_LENGTH
+MAX_LINE_LENGTH=(
+    [css]=100
+    [sh]=100
+    [py]=100
+    [szl]=80
+    [thrift]=80)
+function check_line_length {
+    if [[ $SKIP =~ "linelength" ]]; then
+        return
+    fi
+
+    echo -e "\nChecking line length [linelength]"
+    for file in $files; do
+        extension=${file##*.}
+        if [[ -n ${MAX_LINE_LENGTH[$extension]} ]]; then
+            too_long=$(( ${MAX_LINE_LENGTH[$extension]} + 1 ))
+            match=$(grep -q -P "^.{${too_long},}\$" $file)
+            if [[ $? == 0 ]]; then
+                grep -Hn -P "^.{${too_long},}\$" $file
+                fail=3
+            fi
+        fi
+    done
+    if [[ $fail != 3 ]]; then
+        echo "OK"
+    fi
+}
+
+# Performs any Nextdoor-specific checkes:
+# 1) Don't allow use of urllib.urlopen (require urllib2)
+function check_nextdoor_rules {
+    if [[ $SKIP =~ "nextdoor_rules" ]]; then
+        return
+    fi
+
+    echo -e "\nChecking Nextdoor specific rules"
+    for file in $files; do
+        if [[ "$file" =~ \.py$ ]]; then
+            match=$(grep -q "urllib.urlopen" $file)
+            if [[ $? == 0 ]]; then
+                echo "urllib.urlopen sometimes hangs.  Use urllib2.urlopen instead"
+                grep -Hn "urllib.urlopen" $file
+                fail=4
+            fi
+        fi
+    done
+    if [[ $fail != 4 ]]; then
+        echo "OK"
+    fi
+}
+
+
+# Checks each Python file for style violations.
+function check_python_style {
+    if [[ $SKIP =~ "pep8" ]]; then
+        return
+    fi
+
+    echo -e "\nChecking Python style [pep8]"
+    for file in $files; do
+        if [[ "$file" =~ \.py$ ]]; then
+            # Ignore W291; trailing whitespace is handled above.
+            # Ignore E501; line length is handled above.
+            $PEP8 --ignore=W291,E501 --repeat --count $file 2>/dev/null
+            if [[ $? != 0 ]]; then
+                fail=5
+            fi
+        fi
+    done
+    if [[ $fail != 5 ]]; then
+        echo "OK"
+    fi
+}
+
+
+# Checks each Python file for logical errors.
+function check_python_logic {
+    if [[ $SKIP =~ "pyflakes" ]]; then
+        return
+    fi
+
+    echo -e "\nChecking for Python logical errors [pyflakes]"
+    for file in $files; do
+        # Skip settings.py because it includes "import *" which causes
+        # the pyflakes check to fail.
+        if [[ $(basename $file) = settings.py ]]; then
+            continue
+        fi
+        if [[ "$file" =~ \.py$ ]]; then
+            pyflakes $file
+            if [[ $? != 0 ]]; then
+                fail=6
+            fi
+        fi
+    done
+    if [[ $fail != 6 ]]; then
+        echo "OK"
+    fi
+}
+
+
+# Checks each JavaScript file (including HTML templates) for
+# style/logic errors.
+function check_javascript_style {
+    if [[ $SKIP =~ "jslint" ]]; then
+        return
+    fi
+
+    echo -e "\nChecking JavaScript for style and correctness [jslint]"
+    for file in $files; do
+        if [[ "$file" =~ \.(html|js)$ ]]; then
+            gjslint --unix_mode --jslint_error=indentation $file
+            if [[ $? != 0 ]]; then
+                fail=7
+            fi
+        fi
+    done
+    if [[ $fail != 7 ]]; then
+        echo "OK"
+    fi
+}
+
+
+function cleanup {
+    [[ -d $tempdir ]] && rm -rf $tempdir
+}
+
+
+function notify {
+    local icon=~/src/nextdoor.com/static/images/logo-house-smaller-v2.png
+
+    if [[ $fail != 0 ]]; then
+        echo -en "\nPre-commit checks failed. Run with --no-verify (git-commit)"
+        echo " or --skip=<checks> (git-change) to bypass."
+        if [[ -n $ND_NOTIFY ]]; then
+            notify-send -i $icon "Pre-commit checks failed :("
+        fi
+        exit 1
+    fi
+    if [[ -n $ND_NOTIFY ]]; then
+        notify-send -i $icon "Pre-commit checks passed :)"
+    fi
+}
+
+
+function main {
+    parse_opts $*
+
+    if [[ $SKIP =~ "all" ]]; then
+        SKIP="tests,whitespace,linelength,pep8,pyflakes,jslint,nextdoor_rules"
+    fi
+
+    echo "Running pre-commit checks"
+    [[ -n $SKIP ]] && echo "Skipping checks: $SKIP"
+
+    setup
+
+    if [[ -z $files ]]; then
+        echo "No dirty files; exiting"
+        cleanup
+        exit 0
+    fi
+
+    [[ -n $WHITESPACE ]] && check_whitespace
+    [[ -n $LINE_LENGTH ]] && check_line_length
+    [[ -n $PYTHON_STYLE ]] && check_python_style
+    [[ -n $PYTHON_LOGIC ]] && check_python_logic
+    [[ -n $JAVASCRIPT_STYLE ]] && check_javascript_style
+    [[ -n $TESTS ]] && run_tests
+    [[ -n $NEXTDOOR_RULES ]] && check_nextdoor_rules
+
+    cleanup
+    notify
+}
+
+main $*
