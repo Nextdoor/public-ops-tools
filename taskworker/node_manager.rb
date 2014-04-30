@@ -76,9 +76,9 @@ def get_queue_prefix(args)
   sha = parts[1]
   release_parts = parts[0].split('-')
   if release_parts.size() == 2
-    return release_parts[1]
+    return release_parts[1] + '-' + sha
   else
-    return sha
+    return parts[0] + '-' + sha
   end
 end
 
@@ -347,7 +347,7 @@ def parse_arguments()
 
     opts.on('-n', '--release_number NUM',
             'Release number. E.g., if release_0007a, then the release_number is 0007a.') do |release_number|
-      options[:release_number] = release_number;
+      options[:release_number] = release_number.strip;
     end
 
     opts.on('-r', '--region REGION', 'AWS Region.') do |region|

@@ -31,13 +31,13 @@ class NodeManagerTest < Test::Unit::TestCase
 
   def test_get_queue_prefix
     queue_prefix = get_queue_prefix(:release_version => '20140409-035643~release-0007a.bb93bbc')
-    assert(queue_prefix == '0007a')
+    assert(queue_prefix == '0007a-bb93bbc')
 
     queue_prefix = get_queue_prefix(:release_version => '20140409-035643~release.bb93bbc')
-    assert(queue_prefix == 'bb93bbc')
+    assert(queue_prefix == 'release-bb93bbc')
 
     queue_prefix = get_queue_prefix(:release_version => '20140409-035643~master.bb93bbc')
-    assert(queue_prefix == 'bb93bbc')
+    assert(queue_prefix == 'master-bb93bbc')
   end
 
   def test_get_server_array_name
