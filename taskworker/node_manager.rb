@@ -228,14 +228,34 @@ def create_server_array(args)
   $log.info("Will install #{service}=#{release_version} for all instances.")
 
   # Launch new instances
+  launched_instances = []
   for i in 1..instances
     instance = new_server_array.launch
     if not instance.nil?
+      launched_instances << instance
       $log.info("SUCCESS. Launched #{instance.show.name}.")
     else
       $log.error('FAILED. Failed to launch an instance.')
     end
   end
+
+  new_server_array = find_server_array(:right_client => right_client,
+                                   :server_array_name => server_array_name)
+
+  # Wait for at least one instance to become operational.
+  num_operational_instances = 0
+  while num_operational_instances == 0
+    $log.info("No any instance is operational ... wait for 1 min ...")
+    sleep 60
+    for instance in new_server_array.current_instances.index
+      if instance.state == 'operational'
+        num_operational_instances += 1
+        $log.info("At least one instance is operational.")
+        break
+      end
+    end
+  end
+
   return new_server_array
 end
 
@@ -520,6 +540,7 @@ def main()
                                       :cookies => cookies)
   server_array = find_server_array(:right_client => right_client,
                                    :server_array_name => server_array_name)
+
   if not server_array.nil?
     if not options[:delete]
       # In the case of creating a new server array.
