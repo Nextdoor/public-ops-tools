@@ -33,6 +33,8 @@ $DEFAULT_ENV = 'staging'
 $DEFAULT_REGION = 'uswest2'
 $DEFAULT_SERVICE_NAME = 'servicename'
 $DEFAULT_OAUTH2_API_URL = 'https://my.rightscale.com/api/oauth2'
+$MAX_WAIT_SECONDS = 1800  
+$SPEED_OF_ITERATION = 60  # Each iteration waits 1 minute.
 
 # Returns release version.
 #
@@ -244,9 +246,13 @@ def create_server_array(args)
 
   # Wait for at least one instance to become operational.
   num_operational_instances = 0
+  wait_secs = 1
   while num_operational_instances == 0
-    $log.info("No any instance is operational ... wait for 1 min ...")
-    sleep 60
+    if wait_secs > $MAX_WAIT_SECONDS
+      abort('Timeout! Please go to RightScale to see if instances are stranded.')
+    end
+    $log.info("No any instance is operational ... wait for #{$SPEED_OF_ITERATION} secs ...")
+    sleep $SPEED_OF_ITERATION
     for instance in new_server_array.current_instances.index
       if instance.state == 'operational'
         num_operational_instances += 1
@@ -254,6 +260,7 @@ def create_server_array(args)
         break
       end
     end
+    wait_secs += $SPEED_OF_ITERATION
   end
 
   return new_server_array
@@ -485,12 +492,17 @@ def delete_server_array(args)
       count = 0
     end
 
+    wait_secs = 1
     while count > 0
-      $log.info("#{count} instances of #{server_array.name} are still running ... wait for 1 min ...")
+      if wait_secs > $MAX_WAIT_SECONDS
+        abort('Timeout! Please go to RightScale to see what\'s going on.')
+      end
+      $log.info("#{count} instances of #{server_array.name} are still running ... wait for #{$SPEED_OF_ITERATION} secs ...")
       sleep 60
       server_array = find_server_array(:right_client => right_client,
                                        :server_array_name => server_array_name)
       count = server_array.instances_count
+      wait_secs += $SPEED_OF_ITERATION
     end
   end
 
