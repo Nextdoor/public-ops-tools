@@ -215,7 +215,9 @@ def create_server_array(args)
 
   # Rename the newly created server array
   params = { :server_array => {
-      :name => server_array_name }}
+      :name => server_array_name,
+      :state => 'enabled'
+  }}
   new_server_array.show.update(params)
   $log.info("SUCCESS. Created server array #{server_array_name}")
   puppet_facts = get_puppet_facts(:region => region,
@@ -469,10 +471,17 @@ def delete_server_array(args)
         end
       end
     end
+
     count = server_array.instances_count
     if dryrun
       count = 0
+    else
+      params = { :server_array => {
+          :state => 'disabled'
+        }}
+      server_array.show.update(params)
     end
+
     while count > 0
       $log.info("#{count} instances of #{server_array.name} are still running ... wait for 1 min ...")
       sleep 60
