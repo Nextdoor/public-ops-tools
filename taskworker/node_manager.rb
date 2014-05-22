@@ -215,7 +215,9 @@ def create_server_array(args)
 
   # Rename the newly created server array
   params = { :server_array => {
-      :name => server_array_name }}
+      :name => server_array_name,
+      :state => 'enabled'
+  }}
   new_server_array.show.update(params)
   $log.info("SUCCESS. Created server array #{server_array_name}")
   puppet_facts = get_puppet_facts(:region => region,
