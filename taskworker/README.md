@@ -1,6 +1,10 @@
-## node manager
-Create or delete a server array via RightScale API.
+## Node Manager
+This script creates or deletes a server array via the RightScale API.
 
-### Run test
+### Setup
+
+    rake install
+
+### Running Tests
+
     rake test
-
