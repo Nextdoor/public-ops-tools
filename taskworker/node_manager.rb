@@ -410,6 +410,10 @@ def parse_arguments()
     opts.on('-i', '--instances INTEGER', 'Number of instances to launch in this server array.') do |instances|
       options[:instances] = instances.to_i
     end
+
+    opts.on('-t', '--taskworker BOOLEAN', 'Is this a taskworker array?  If so, we check the queue before deleting.') do |taskworker|
+      options[:taskworker] = (taskworker == 'true')
+    end
   end
 
   parser.parse!
@@ -419,11 +423,13 @@ def parse_arguments()
   end
 
   if options[:delete]
-    if options[:aws_access_key_id].nil?
-      abort('--aws_access_key_id is required.')
-    end
-    if options[:aws_secret_access_key].nil?
-      abort('--aws_secret_access_key is required.')
+    if options[:taskworker]
+      if options[:aws_access_key_id].nil?
+        abort('--aws_access_key_id is required.')
+      end
+      if options[:aws_secret_access_key].nil?
+        abort('--aws_secret_access_key is required.')
+      end
     end
     if options[:release_number].nil?
       abort('--release_number is required.')
@@ -500,6 +506,34 @@ def delete_server_array(args)
   $log.info("SUCCESS. Destroyed #{server_array.name} ...")
 end
 
+# Get an instance of the RightScale API client
+#
+# * *Args*    :
+#   - +oauth2_api_url+ -> RightScale oauth API URL
+#   - +refresh_token+ -> RightScale API token
+#   - +api_version+ -> RightScale API version number
+#   - +api_url+ -> RightScale API URL
+#
+def get_right_client(args)
+  oauth2_api_url = args[:oauth2_api_url]
+  refresh_token = args[:refresh_token]
+  api_version = args[:api_version]
+  api_url = args[:api_url]
+
+  # Fetch OAuth2 access token
+  client = RestClient::Resource.new(oauth2_api_url, :timeout => 15)
+  access_token = get_access_token(:client => client,
+                                  :refresh_token => refresh_token,
+                                  :api_version => api_version)
+
+  # Check if any server array having the same name, if yes, exit.
+  cookies = {}
+  cookies[:rs_gbl] = access_token
+  return RightApi::Client.new(:api_url => api_url,
+                              :api_version => api_version,
+                              :cookies => cookies)
+end
+
 # Main function.
 #
 def main()
@@ -524,7 +558,7 @@ def main()
                                             :env => options[:env],
                                             :region => options[:region])
 
-  if options[:delete]
+  if options[:delete] and options[:taskworker]
     queues_empty = are_queues_empty(:region => options[:region],
                                     :env => options[:env],
                                     :aws_access_key_id => options[:aws_access_key_id],
@@ -535,19 +569,9 @@ def main()
     end
   end
 
-  # Fetch OAuth2 access token
-  client = RestClient::Resource.new(options[:oauth2_api_url],
-                                    :timeout => 15)
-  access_token = get_access_token(:client => client,
-                                  :refresh_token => options[:refresh_token],
-                                  :api_version => options[:api_version])
+  # Instantiate the RightScale API
+  right_client = get_right_client(options)
 
-  # Check if any server array having the same name, if yes, exit.
-  cookies = {}
-  cookies[:rs_gbl] = access_token
-  right_client = RightApi::Client.new(:api_url => options[:api_url],
-                                      :api_version => options[:api_version],
-                                      :cookies => cookies)
   server_array = find_server_array(:right_client => right_client,
                                    :server_array_name => server_array_name)
 
