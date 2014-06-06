@@ -81,6 +81,10 @@ def parse_arguments()
             'RightScale OAuth2 URL.') do |oauth2_api_url|
       options[:oauth2_api_url] = oauth2_api_url
     end
+
+    opts.on('-d', '--dryrun', 'Dryrun. Do not update ELB.') do
+      options[:dryrun] = true
+    end
   end
 
   parser.parse!
@@ -141,14 +145,14 @@ def update_elb(args, action)
   else
     task = server_array.multi_run_executable(:right_script_href => right_script,
                                              :inputs => {'ELB_NAME' => "text:%s" % args[:elb]})
-  end
 
-  while not task.show.summary.include? 'completed'
-    $log.info('Waiting for add task to complete (%s).' % task.show.summary)
-    sleep 1
+    while not task.show.summary.include? 'completed'
+      $log.info('Waiting for add task to complete (%s).' % task.show.summary)
+      sleep 1
 
-    if task.show.summary.include? 'failed'
-      abort('FAILED.  RightScript task failed!')
+      if task.show.summary.include? 'failed'
+        abort('FAILED.  RightScript task failed!')
+      end
     end
   end
 
