@@ -33,6 +33,7 @@ $DEFAULT_ENV = 'staging'
 $DEFAULT_REGION = 'uswest2'
 $DEFAULT_SERVICE_NAME = 'servicename'
 $DEFAULT_OAUTH2_API_URL = 'https://my.rightscale.com/api/oauth2'
+$DEFAULT_APP_GROUP = 'us1'
 
 # Returns release version.
 #
@@ -124,9 +125,10 @@ def get_puppet_facts(args)
   region = args[:region]
   service = args[:service]
   env = args[:env]
+  app_group = args[:app_group]
   release_version = args[:release_version]
   packages = service.split(',')
-  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp="
+  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:app_group=#{app_group}\",\"text:shard=#{region}\",\"text:nsp="
   for package in packages:
       puppet_facts += "#{package}=#{release_version} "
   end
@@ -198,6 +200,7 @@ def create_server_array(args)
   release_version = args[:release_version]
   service = args[:service]
   env = args[:env]
+  app_group = args[:app_group]
   right_client = args[:right_client]
   region = args[:region]
 
@@ -222,6 +225,7 @@ def create_server_array(args)
   $log.info("SUCCESS. Created server array #{server_array_name}")
   puppet_facts = get_puppet_facts(:region => region,
                                   :service => service,
+                                  :app_group => app_group,
                                   :env => env,
                                   :release_version => release_version)
   new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
@@ -339,7 +343,8 @@ def parse_arguments()
     :aws_access_key_id => nil,
     :aws_secret_access_key => nil,
     :instances => $DEFAULT_NUM_INSTANCES,
-    :dryrun => false
+    :dryrun => false,
+    :app_group => $DEFAULT_APP_GROUP
   }
 
   parser = OptionParser.new do|opts|
@@ -409,6 +414,10 @@ def parse_arguments()
 
     opts.on('-i', '--instances INTEGER', 'Number of instances to launch in this server array.') do |instances|
       options[:instances] = instances.to_i
+    end
+
+    opts.on('-g', '--app_group APP_GROUP', 'App group.') do |app_group|
+      options[:app_group] = app_group;
     end
   end
 
@@ -576,6 +585,7 @@ def main()
   server_array = create_server_array(:right_client => right_client,
                                      :instances => options[:instances],
                                      :env => options[:env],
+                                     :app_group => options[:app_group],
                                      :tmpl_server_array => options[:tmpl_server_array],
                                      :service => options[:service],
                                      :dryrun => options[:dryrun],

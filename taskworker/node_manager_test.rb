@@ -57,20 +57,23 @@ class NodeManagerTest < Test::Unit::TestCase
   def test_get_puppet_facts
     facts = get_puppet_facts(:region => 'uswest1',
                              :env => 'prod',
+                             :app_group => 'us2',
                              :service => 'nextdoor.com,taskworker',
                              :release_version => 'abcd')
-    assert(facts == 'array:["text:base_class=node_prod::nsp","text:shard=uswest1","text:nsp=nextdoor.com=abcd taskworker=abcd"]')
+    assert(facts == 'array:["text:base_class=node_prod::nsp","text:app_group=us2","text:shard=uswest1","text:nsp=nextdoor.com=abcd taskworker=abcd"]')
 
     facts = get_puppet_facts(:region => 'uswest1',
                              :env => 'staging',
+                             :app_group => 'us3',
                              :service => 'nextdoor.com,hello,taskworker',
                              :release_version => 'abcd')
-    assert(facts == 'array:["text:base_class=node_staging::nsp","text:shard=uswest1","text:nsp=nextdoor.com=abcd hello=abcd taskworker=abcd"]')
+    assert(facts == 'array:["text:base_class=node_staging::nsp","text:app_group=us3","text:shard=uswest1","text:nsp=nextdoor.com=abcd hello=abcd taskworker=abcd"]')
 
     facts = get_puppet_facts(:region => 'uswest1',
+                             :app_group => 'us1',
                              :service => 'taskworker',
                              :release_version => 'abcd')
-    assert(facts == 'array:["text:base_class=node_::nsp","text:shard=uswest1","text:nsp=taskworker=abcd"]')
+    assert(facts == 'array:["text:base_class=node_::nsp","text:app_group=us1","text:shard=uswest1","text:nsp=taskworker=abcd"]')
   end
 
   def test_get_access_token
