@@ -10,14 +10,25 @@
 require 'optparse'
 require './node_manager'
 
-$RIGHT_SCRIPT_ADD    = '/api/right_scripts/438671001'
-$RIGHT_SCRIPT_REMOVE = '/api/right_scripts/396277001'
+# These are the RightScale 'RightScripts' that add or remove from ELBs.
+# They're unique to our accounts
+# Add - Connect instance to ELB
+# Remove - Disconnect instance from ELB
+$RS_ADD = {
+  'staging' => '/api/right_scripts/438671001',
+  'prod'    => '/api/right_scripts/232971001'
+}
+$RS_REMOVE = {
+  'staging' => '/api/right_scripts/396277001',
+  'prod' => '/api/right_scripts/232972001'
+}
 
-# Parse command line arguments.
+# Parse command line arguments.  Some defaults come from node_manager.rb
 def parse_arguments()
   options = {
     :add => false,
     :remove => false,
+    :env => $DEFAULT_ENV,
     :server_array => nil,
     :elb => nil,
     :oauth2_api_url => $DEFAULT_OAUTH2_API_URL,
@@ -38,12 +49,16 @@ def parse_arguments()
       options[:add] = true
     end
 
+    opts.on('-e', '--env ENV', 'Deployment environment.') do |env|
+      options[:env] = env;
+    end
+
     opts.on('-s', '--server_array SERVER_ARRAY_NAME',
             'Server array name to add or remove from ELB.') do |server_array|
       options[:server_array] = server_array
     end
 
-    opts.on('-e', '--elb ELB_NAME',
+    opts.on('-l', '--elb ELB_NAME',
             'ELB name to add or remove server array to or from.') do |elb|
       options[:elb] = elb
     end
@@ -86,6 +101,10 @@ def parse_arguments()
     abort('You must specify a refresh token.')
   end
 
+  if not options[:env] == 'staging' and options[:env] == 'prod'
+    abort('env must be staging or prod.')
+  end
+
   return options
 end
 
@@ -101,15 +120,15 @@ def update_elb(args, action)
   right_client = get_right_client(args)
 
   if action == 'add'
-    right_script = $RIGHT_SCRIPT_ADD
+    right_script = $RS_ADD[args[:env]]
     pre_msg   = 'Adding %s to %s'
     post_msg  = 'SUCCESS. Added %s to %s'
   elsif action == 'remove'
-    right_script = $RIGHT_SCRIPT_REMOVE
+    right_script = $RS_REMOVE[args[:env]]
     pre_msg  = 'Removing %s from %s'
     post_msg = 'SUCCESS. Removed %s from %s'
   else
-    abort('Action must be add or remove')
+    abort('Action must be add or remove.')
   end
 
   $log.info('Looking for server_array %s.' % args[:server_array])
@@ -117,8 +136,12 @@ def update_elb(args, action)
                                    :server_array_name => args[:server_array])
 
   $log.info(pre_msg % [args[:server_array], args[:elb]])
-  task = server_array.multi_run_executable(:right_script_href => right_script,
-                                           :inputs => {'ELB_NAME' => "text:%s" % args[:elb]})
+  if args[:dryrun]
+    $log.info('Dry run mode. Not operating on the ELB.')
+  else
+    task = server_array.multi_run_executable(:right_script_href => right_script,
+                                             :inputs => {'ELB_NAME' => "text:%s" % args[:elb]})
+  end
 
   while not task.show.summary.include? 'completed'
     $log.info('Waiting for add task to complete (%s).' % task.show.summary)

@@ -33,6 +33,7 @@ $DEFAULT_ENV = 'staging'
 $DEFAULT_REGION = 'uswest2'
 $DEFAULT_SERVICE_NAME = 'servicename'
 $DEFAULT_OAUTH2_API_URL = 'https://my.rightscale.com/api/oauth2'
+$DEFAULT_OAUTH_TIMEOUT = 15
 
 # Returns release version.
 #
@@ -521,7 +522,7 @@ def get_right_client(args)
   api_url = args[:api_url]
 
   # Fetch OAuth2 access token
-  client = RestClient::Resource.new(oauth2_api_url, :timeout => 15)
+  client = RestClient::Resource.new(oauth2_api_url, :timeout => $DEFAULT_OAUTH_TIMEOUT)
   access_token = get_access_token(:client => client,
                                   :refresh_token => refresh_token,
                                   :api_version => api_version)
