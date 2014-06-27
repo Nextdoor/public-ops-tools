@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Importing our trusted Nextdoor GPG key
+echo "
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+mQENBE75JiUBCACakhf2Hr0nJRJcomZrZO9syWb+dN6efmSb7rYQ7KjfIhTlr5CK
+lGl1OdY3/94DuPIc6taxYITXqerwXA81Y22P9gbfYboMorqsekxl2Gc5UMLAAAzw
+OLtm0Lo2ddgSdGqk1GfNAzFhvUbtM7RHiu8/WmnLb91mguOLkyNadAbrkhYSjoTI
+ps5IbaX/ac9TpernlJYXoUGwSf0QBaLTkfeuVMapG7ipeb9ZAZwoyICf6U89s27U
+IWCZ7oIVisnsdsSAL9b+PSBNIT1EVHaTSSCic4nrVpa9CS8G2HaXFu4zBABIBH+M
+Qodz+Tbpc/pogvsN4OnhMj+IUmBGPVxHizMjABEBAAG0G05leHRkb29yIDxlbmdA
+bmV4dGRvb3IuY29tPokBOAQTAQIAIgUCTvkmJQIbAwYLCQgHAwIGFQgCCQoLBBYC
+AwECHgECF4AACgkQkBrmSl5OyNyb5ggAlTtw9/DloMrQczTqrlW0lowTj3naic03
+9VeRC4Yqv1Aai0lRVy31b0IqMV1tybpA//c7trcfCeOqBvWTpwXee0/JAeYryOFd
+qeyC/bpY3StoArnHzJbPxm0kzaWoI+KLAETrvJh+2LvCce3ztazrpmc5nmq/OyHF
+nInvuXNfjaXir6sojfE6c8PsT08MaUbsz/RIynMzoP0CgUPx+DB7JeTYNAUlkw5l
+CeStz8NKPQopUH/Zvo0ug475Qgb3KDKJEmhqq16NkV8Adi/v5hxiW0x0U1uyQ0Mu
+ku3wjAseEReDAwIX3Q2q778keN8d468ZQXobv/dkm42ZqYU8GvQ3E7kBDQRO+SYl
+AQgAlxWOc5/5JX+2mwwoipowIxsTSEP+e+q1hNxIlpbSTx+UPbQ4FibQfyZG/PDZ
+PzG9ZF6VJqKFZ9i6T/1FxDB6IQRPBy/FTHjP9EfCTYEGU6o7fblqj37TUKn3UP39
+PyC2Ab4y205PtKKC95wPiZ0ydfj6Y+0lr8cGxuYnouTYTmLKzgbTdotVivEJahfV
+q8iGglq4U3EXvtBaqlE3C6LL/fSyTvmlXs+qatYiMFRBieQndGo9nX6GxfbLSVHF
+zCAzrZKAEnGEF7tLfq7CEyCnC7DDzgCyVwEDOsj0qcS5TP5HDWdecjqm5kt2VGi9
+0WDq0OMiQ84GXkNgaB9UM8/MMwARAQABiQEfBBgBAgAJBQJO+SYlAhsMAAoJEJAa
+5kpeTsjcElYH/1rah5SQfsHAGCh3U+QC6Fd4mEgOlw/a3nJPdX6hgFE/IDDzeBTf
+M8HgkdFCRG5krofYxF+HaJz0GJewP3L++m+CQwGanADW14Me3ay2pR0g0vcIrdyV
+zXIWOauYD2aRxk/81sCakdrutQlFkgOL/rIyJLSKabla9NKaMmI+oSRxMSogiw4M
+wRfJCmJ68RCYbKo+3qEGRFrJZXMq8nJS5rCHMAZqI5A/ndUdlP1Db49iDdsk5xSP
+Yhv8t1ZhaKJ0Ij3fiDLgvsYf8ZKJbdqYXo3thVSBvlrOtUJF05Cd0p3FdOKJNrka
+3kfk+gQvanFg6Jj0bzTewl4ukEMjA5DcwOM=
+=pggg
+-----END PGP PUBLIC KEY BLOCK-----" | apt-key add -
+apt-get update
+
+# Install our apt-transport-s3 package
+apt-get -y install apt-transport-s3
+
+# Uncomment any s3:// prefixed S3 repos from our list
+sed -i 's/#deb s3/deb s3/' /etc/apt/sources.list
+apt-get update
