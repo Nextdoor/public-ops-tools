@@ -48,6 +48,7 @@ sleep 15
 DEFAULT_PACKAGES=" \
   default-jre-headless \
   cowbuilder \
+  debhelper \
   git \
   libcommons-codec-java \
   daemon \
