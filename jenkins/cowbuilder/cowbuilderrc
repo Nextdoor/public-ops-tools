@@ -1,0 +1,58 @@
+# This file was stolen from http://wiki.debian.org/PbuilderTricks
+# ---------------------------------------------------------------
+# Pbuiler is used to build our Debian packages in fully chrooted
+# environments. Each potential environment we want to build for has
+# to be created with the 'cowbuilder create' command. After that,
+# the pdebuild command can leverage these environments to build
+# their packages.
+# ---------------------------------------------------------------
+
+# Mirrors to use. Update these to your preferred mirror.
+UBUNTU_MIRROR="mirrors.kernel.org"
+
+# Optionally set a default distribution if none is used. Note that you can set
+# your own default (i.e. ${DIST:="unstable"}).
+: ${DIST:="$(lsb_release --short --codename)"}
+
+# Optionally set the architecture to the host architecture if none set. Note
+# that you can set your own default (i.e. ${ARCH:="i386"}).
+: ${ARCH:="$(dpkg --print-architecture)"}
+
+NAME="$DIST"
+if [ -n "${ARCH}" ]; then
+    NAME="$NAME-$ARCH"
+    DEBOOTSTRAPOPTS=("--arch" "$ARCH" "${DEBOOTSTRAPOPTS[@]}")
+fi
+BASETGZ="/var/cache/pbuilder/$NAME-base.tgz"
+BASEPATH="/var/cache/pbuilder/$NAME-base.cow/"
+DISTRIBUTION="$DIST"
+BUILDRESULT="/var/cache/pbuilder/$NAME/result/"
+APTCACHE="/var/cache/pbuilder/$NAME/aptcache/"
+BUILDPLACE="/var/cache/pbuilder/build/"
+
+# Ubuntu configuration
+MIRRORSITE="http://$UBUNTU_MIRROR/ubuntu/"
+COMPONENTS="main restricted universe multiverse"
+
+# Use the system trusted.gpg file for GPG verification
+DEBOOTSTRAPOPTS=("--keyring=/etc/apt/trusted.gpg" "${DEBOOTSTRAPOPTS[@]}")
+
+# Same as above, but used in the image AFTER the initial debootstrap process
+APTKEYRINGS=("/etc/apt/trusted.gpg")
+
+# apt-transport-https: installed so that our https:// hosted repos are usable
+# ssl-cert: installed here because it fails to install if you try to use apt.
+#           (known bug with installing ssl-cert in a chrooted environment, but
+#           it seems to work if you do it at the debootstrap stage)
+DEBOOTSTRAPOPTS=("--include=ssl-cert,apt-transport-https" "${DEBOOTSTRAPOPTS[@]}")
+
+# Explicitly add in our bootstrap repositories. Use these to install the apt-transport-s3/https
+# packages that will be used to dynamically pull down packages from private repos.
+#
+# We gather all of the repo configs from /etc/apt/sources.list.d and then munge
+# them:
+#  a) Convert all cases of 'precise' to '$DIST'
+#  b) Comment out any 'deb s3://' repos for now, they will be enabled when the apt-transport-s3
+#     package is installed (see the finish.sh script)
+#
+OTHERMIRROR="$OTHERMIRROR | `cat /etc/apt/sources.list.d/* | grep '^deb ' | sed "s/precise/$DIST/g" | sed 's/^deb s3/\#deb s3/' | tr '\n' '|'`"
