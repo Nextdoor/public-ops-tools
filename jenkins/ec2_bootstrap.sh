@@ -177,7 +177,7 @@ create_apt_sources() {
   DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q install apt-transport-s3
 
   # Now, install the apt-transport-s3 backed repos
-  echo -e "${HTTPS_REPOS}" > /etc/apt/sources.list.d/s3.sources.list
+  echo -e "${S3_REPOS}" > /etc/apt/sources.list.d/s3.sources.list
   DEBIAN_FRONTEND=noninteractive apt-get -y -q update
 }
 
