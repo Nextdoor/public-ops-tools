@@ -47,8 +47,7 @@ sleep 15
 # development (like compiling code). Space-separated list.
 DEFAULT_PACKAGES=" \
   default-jre-headless \
-  cowbuilder \
-  debhelper \
+  cowbuilder debhelper quilt \
   git \
   libcommons-codec-java \
   daemon \
