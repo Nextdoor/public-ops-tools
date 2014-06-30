@@ -192,14 +192,10 @@ install_packages() {
 }
 
 install_ruby() {
-  # Install RVM to the ubuntu user (required for the Jenkins RVM Plugin), and install Ruby
-  # versions 1.8.7 and 1.9.3 immediately. If we don't, Jenkins has a bad habit of trying to do the
-  # install multiple times concurrently (if you launch multiple concurrent jobs), and they conflict with
-  # each other.
+  # Set up Ruby, but explicitly uninstall RVM. This lets Jenkins handle the install
+  # of RVM.
   DEBIAN_FRONTEND=noninteractive apt-get --purge -y --force-yes remove ruby-rvm
   DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q install $RUBY_PACKAGES
-
-  curl -L https://get.rvm.io | bash -s stable --ruby --autolibs=enable --auto-dotfiles
 }
 
 function main() {
