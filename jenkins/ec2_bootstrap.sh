@@ -45,10 +45,14 @@ sleep 15
 # Default list of packages that are installed via APT. These are required to
 # start up Jenkins, and are base packages required for other types of
 # development (like compiling code). Space-separated list.
-DEFAULT_PACKAGES=" \
-  default-jre-headless \
+DEBIAN_BUILD_PACKAGES=" \
   cowbuilder \
   debhelper \
+  quilt"
+
+DEFAULT_PACKAGES=" \
+  ${DEBIAN_BUILD_PACKAGES}
+  default-jre-headless \
   git \
   libcommons-codec-java \
   daemon \
