@@ -37,10 +37,13 @@
 set +x
 set -e
 
-# Sleep for 15 seconds.. seems that there may be some background things going on
+# Sleep for 3 seconds.. seems that there may be some background things going on
 # when the node first boots up that prevents the apt-installs below to work. Waiting
 # seems seems to help.
-sleep 15
+sleep 3
+
+# Quiet down the APT command
+export DEBIAN_FRONTEND=noninteractive
 
 # Default list of packages that are installed via APT. These are required to
 # start up Jenkins, and are base packages required for other types of
@@ -71,7 +74,6 @@ DEFAULT_PACKAGES=" \
   libffi-dev \
   libmemcached-dev \
   python3 \
-  nodejs \
   npm"
 
 # Ruby and all the Ruby dependencies (RVM is manually installed later
@@ -88,10 +90,42 @@ JENKINS_HOME="/mnt/jenkins"
 # Used to discover what ephemeral storage volumes were setup for this host.
 METADATA_URL_BASE="http://169.254.169.254/2012-01-12"
 
+# Nextdoor Apt-Key Contents
+NEXTDOOR_APT_KEY="-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+mQENBE75JiUBCACakhf2Hr0nJRJcomZrZO9syWb+dN6efmSb7rYQ7KjfIhTlr5CK
+lGl1OdY3/94DuPIc6taxYITXqerwXA81Y22P9gbfYboMorqsekxl2Gc5UMLAAAzw
+OLtm0Lo2ddgSdGqk1GfNAzFhvUbtM7RHiu8/WmnLb91mguOLkyNadAbrkhYSjoTI
+ps5IbaX/ac9TpernlJYXoUGwSf0QBaLTkfeuVMapG7ipeb9ZAZwoyICf6U89s27U
+IWCZ7oIVisnsdsSAL9b+PSBNIT1EVHaTSSCic4nrVpa9CS8G2HaXFu4zBABIBH+M
+Qodz+Tbpc/pogvsN4OnhMj+IUmBGPVxHizMjABEBAAG0G05leHRkb29yIDxlbmdA
+bmV4dGRvb3IuY29tPokBOAQTAQIAIgUCTvkmJQIbAwYLCQgHAwIGFQgCCQoLBBYC
+AwECHgECF4AACgkQkBrmSl5OyNyb5ggAlTtw9/DloMrQczTqrlW0lowTj3naic03
+9VeRC4Yqv1Aai0lRVy31b0IqMV1tybpA//c7trcfCeOqBvWTpwXee0/JAeYryOFd
+qeyC/bpY3StoArnHzJbPxm0kzaWoI+KLAETrvJh+2LvCce3ztazrpmc5nmq/OyHF
+nInvuXNfjaXir6sojfE6c8PsT08MaUbsz/RIynMzoP0CgUPx+DB7JeTYNAUlkw5l
+CeStz8NKPQopUH/Zvo0ug475Qgb3KDKJEmhqq16NkV8Adi/v5hxiW0x0U1uyQ0Mu
+ku3wjAseEReDAwIX3Q2q778keN8d468ZQXobv/dkm42ZqYU8GvQ3E7kBDQRO+SYl
+AQgAlxWOc5/5JX+2mwwoipowIxsTSEP+e+q1hNxIlpbSTx+UPbQ4FibQfyZG/PDZ
+PzG9ZF6VJqKFZ9i6T/1FxDB6IQRPBy/FTHjP9EfCTYEGU6o7fblqj37TUKn3UP39
+PyC2Ab4y205PtKKC95wPiZ0ydfj6Y+0lr8cGxuYnouTYTmLKzgbTdotVivEJahfV
+q8iGglq4U3EXvtBaqlE3C6LL/fSyTvmlXs+qatYiMFRBieQndGo9nX6GxfbLSVHF
+zCAzrZKAEnGEF7tLfq7CEyCnC7DDzgCyVwEDOsj0qcS5TP5HDWdecjqm5kt2VGi9
+0WDq0OMiQ84GXkNgaB9UM8/MMwARAQABiQEfBBgBAgAJBQJO+SYlAhsMAAoJEJAa
+5kpeTsjcElYH/1rah5SQfsHAGCh3U+QC6Fd4mEgOlw/a3nJPdX6hgFE/IDDzeBTf
+M8HgkdFCRG5krofYxF+HaJz0GJewP3L++m+CQwGanADW14Me3ay2pR0g0vcIrdyV
+zXIWOauYD2aRxk/81sCakdrutQlFkgOL/rIyJLSKabla9NKaMmI+oSRxMSogiw4M
+wRfJCmJ68RCYbKo+3qEGRFrJZXMq8nJS5rCHMAZqI5A/ndUdlP1Db49iDdsk5xSP
+Yhv8t1ZhaKJ0Ij3fiDLgvsYf8ZKJbdqYXo3thVSBvlrOtUJF05Cd0p3FdOKJNrka
+3kfk+gQvanFg6Jj0bzTewl4ukEMjA5DcwOM=
+=pggg
+-----END PGP PUBLIC KEY BLOCK-----"
+
 # Set up a couple of misc system settings...
 initial_system_setup() {
   # Don't use the EC2 Apt mirrors since they go down more regularly than Ubuntu's
-  sed -i -e  's/us-east-1\.ec2\.//g' /etc/apt/sources.list
+  sed -i -e 's/us-east-1\.ec2\.//g' /etc/apt/sources.list
 
   # Ensure that we can do git clones without strict host key checking
   cat <<EOF >> ~ubuntu/.ssh/config
@@ -99,13 +133,19 @@ Host *
         StrictHostKeyChecking no
 EOF
 
+  # Install our nextdoor GPG key
+  echo $NEXTDOOR_APT_KEY | apt-key add -
+
   # Do an Apt-Get update so that later package installs can succeed
-  DEBIAN_FRONTEND=noninteractive apt-get -y -q update
+  apt-get -y -q update
 }
 
 raid_ephemeral_storage() {
+  # If the volume is already setup as a md0 raid, skip this func
+  grep 'md0' /etc/mtab > /dev/null && return
+
   # Ensure mdadm is installed
-  DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q install mdadm
+  apt-get -y --force-yes -q install mdadm
 
   # Configure Raid - take into account xvdb or sdb
   root_drive=`df -h | grep -v grep | awk 'NR==2{print $1}'`
@@ -167,35 +207,41 @@ raid_ephemeral_storage() {
   chmod 777 /etc/fstab
   sed -i "/${DRIVE_SCHEME}b/d" /etc/fstab
 }
+
 prep_for_jenkins() {
   # Set up a location for Jenkins on the faster instance-storage
   mkdir $JENKINS_HOME && chown ubuntu:ubuntu $JENKINS_HOME
 }
 
-
 create_apt_sources() {
-  # Install the Nextdoor public repos and install the apt-transport-s3 package
-  echo -e "${HTTPS_REPOS}" > /etc/apt/sources.list.d/https.sources.list
+  if [[ ! -f '/etc/apt/sources.list.d/https.sources.list' ]]; then
+    # Install the Nextdoor public repos and install the apt-transport-s3 package
+    echo -e "${HTTPS_REPOS}" > /etc/apt/sources.list.d/https.sources.list
 
-  # Explicitly install the apt-transport-s3 package from our public repo first
-  DEBIAN_FRONTEND=noninteractive apt-get -y -q update
-  DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q install apt-transport-s3
+    # Explicitly install the apt-transport-s3 package from our public repo first
+    apt-get -y -q update
+  fi
+
+  # Install the apt-transport-s3 driver if its missing
+  dpkg --status apt-transport-s3 > /dev/null || apt-get -y --force-yes -q install apt-transport-s3
 
   # Now, install the apt-transport-s3 backed repos
-  echo -e "${S3_REPOS}" > /etc/apt/sources.list.d/s3.sources.list
-  DEBIAN_FRONTEND=noninteractive apt-get -y -q update
+  if [[ ! -f '/etc/apt/sources.list.d/s3.sources.list' ]]; then
+    echo -e "${S3_REPOS}" > /etc/apt/sources.list.d/s3.sources.list
+    apt-get -y -q update
+  fi
 }
 
 install_packages() {
   # Install all of the required default packages via aptitude
-  DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q install $DEFAULT_PACKAGES
+  apt-get -y --force-yes -q install $DEFAULT_PACKAGES
 }
 
 install_ruby() {
   # Set up Ruby, but explicitly uninstall RVM. This lets Jenkins handle the install
   # of RVM.
-  DEBIAN_FRONTEND=noninteractive apt-get --purge -y --force-yes remove ruby-rvm
-  DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q install $RUBY_PACKAGES
+  apt-get --purge -y --force-yes remove ruby-rvm
+  apt-get -y --force-yes -q install $RUBY_PACKAGES
 }
 
 function main() {
