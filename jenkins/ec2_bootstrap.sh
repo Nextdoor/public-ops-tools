@@ -134,7 +134,7 @@ Host *
 EOF
 
   # Install our nextdoor GPG key
-  echo $NEXTDOOR_APT_KEY | apt-key add -
+  echo "$NEXTDOOR_APT_KEY" | apt-key add -
 
   # Do an Apt-Get update so that later package installs can succeed
   apt-get -y -q update
