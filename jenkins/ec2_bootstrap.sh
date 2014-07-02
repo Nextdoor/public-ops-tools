@@ -74,6 +74,7 @@ DEFAULT_PACKAGES=" \
   libffi-dev \
   libmemcached-dev \
   python3 \
+  go \
   npm"
 
 # Ruby and all the Ruby dependencies (RVM is manually installed later
