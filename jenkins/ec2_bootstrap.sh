@@ -210,7 +210,7 @@ raid_ephemeral_storage() {
 
 prep_for_jenkins() {
   # Set up a location for Jenkins on the faster instance-storage
-  mkdir $JENKINS_HOME && chown ubuntu:ubuntu $JENKINS_HOME
+  mkdir -p $JENKINS_HOME && chown ubuntu:ubuntu $JENKINS_HOME
 }
 
 create_apt_sources() {
