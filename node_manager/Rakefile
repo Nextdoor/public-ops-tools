@@ -7,6 +7,7 @@ task :default => [:test]
 task :install do
     exec "gem install right_api_client"
     exec "gem install right_aws"
+    exec "gem install rspec"
 end
 
 Rake::TestTask.new do |t|
