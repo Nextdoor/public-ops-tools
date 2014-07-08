@@ -119,32 +119,29 @@ end
 #   - +elb+ -> ELB name to add to or remove from.
 #   - +action+ -> Which action to perform, 'add' or 'remove'
 #
-def update_elb(args, action)
-  # Instantiate the RightScale API
-  right_client = get_right_client(args)
-
+def update_elb(right_client, elb, server_array, right_script, action)
   if action == 'add'
-    right_script = $RS_ADD[args[:env]]
+#    right_script = $RS_ADD[args[:env]]
     pre_msg   = 'Adding %s to %s'
     post_msg  = 'SUCCESS. Added %s to %s'
   elsif action == 'remove'
-    right_script = $RS_REMOVE[args[:env]]
+#    right_script = $RS_REMOVE[args[:env]]
     pre_msg  = 'Removing %s from %s'
     post_msg = 'SUCCESS. Removed %s from %s'
   else
     abort('Action must be add or remove.')
   end
 
-  $log.info('Looking for server_array %s.' % args[:server_array])
+  $log.info('Looking for server_array %s.' % server_array)
   server_array = find_server_array(:right_client => right_client,
-                                   :server_array_name => args[:server_array])
+                                   :server_array_name => server_array)
 
-  $log.info(pre_msg % [args[:server_array], args[:elb]])
-  if args[:dryrun]
-    $log.info('Dry run mode. Not operating on the ELB.')
-  else
+  $log.info(pre_msg % [server_array, elb])
+#  if args[:dryrun]
+#    $log.info('Dry run mode. Not operating on the ELB.')
+#  else
     task = server_array.multi_run_executable(:right_script_href => right_script,
-                                             :inputs => {'ELB_NAME' => "text:%s" % args[:elb]})
+                                             :inputs => {'ELB_NAME' => "text:%s" % elb})
 
     while not task.show.summary.include? 'completed'
       $log.info('Waiting for add task to complete (%s).' % task.show.summary)
@@ -154,9 +151,9 @@ def update_elb(args, action)
         abort('FAILED.  RightScript task failed!')
       end
     end
-  end
+#  end
 
-  $log.info(post_msg % [args[:server_array], args[:elb]])
+  $log.info(post_msg % [server_array, elb])
 end
 
 # Main function.
