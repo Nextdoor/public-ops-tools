@@ -1,5 +1,11 @@
 require 'elb_manager'
 
+RSpec.configure do |config|
+  config.mock_with :rspec do |c|
+    c.syntax = [:should, :expect]
+  end
+end
+
 describe 'update_elb' do
   describe 'update_elb checks' do
 
@@ -26,15 +32,13 @@ describe 'update_elb' do
       task_mock.should_receive(:show) {
         task_mock_summary
       }
-      task_mock_summary.should_receive(:summary) { 'Foo' }
+      task_mock_summary.should_receive(:summary) { 'completed' }
 
       sa_mock.should_receive(:multi_run_executable).with(
         :right_script_href => 'fake_url',
         :inputs => { 'ELB_NAME' => 'text:foo_elb' } ) { task_mock }
 
       update_elb(rs_mock, 'foo_elb', 'foo_sa', 'fake_url', 'add')
-  
-  # @rs_mock.should_receive(:some_method).once.with(arg1,arg2).and_return('foo')
     end
   end
 end

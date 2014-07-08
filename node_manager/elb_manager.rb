@@ -144,6 +144,7 @@ def update_elb(right_client, elb, server_array, right_script, action)
                                              :inputs => {'ELB_NAME' => "text:%s" % elb})
 
     while not task.show.summary.include? 'completed'
+      # FIXME add a timeout
       $log.info('Waiting for add task to complete (%s).' % task.show.summary)
       sleep 1
 
