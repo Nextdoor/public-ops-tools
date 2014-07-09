@@ -114,12 +114,6 @@ def parse_arguments()
 end
 
 # Add or remove all instances of a server array to an ELB.
-#
-# * *Args*    :
-#   - +server_array+ -> Server array name to add or remove.
-#   - +elb+ -> ELB name to add to or remove from.
-#   - +action+ -> Which action to perform, 'add' or 'remove'
-#
 def update_elb(right_client, elb_name, server_array_name, right_script, dryrun,
                action)
   if action == 'add'
