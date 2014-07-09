@@ -24,6 +24,9 @@ $RIGHT_SCRIPT = {
     'prod'     => '/api/right_scripts/232972001' }
 }
 
+# How many seconds we wait checking the add/remove task before giving up
+$RS_TIMEOUT = 300
+
 # Parse command line arguments.  Some defaults come from node_manager.rb
 def parse_arguments()
   options = {
@@ -138,15 +141,21 @@ def update_elb(right_client, elb_name, server_array_name, right_script, dryrun,
              :right_script_href => right_script,
              :inputs => {'ELB_NAME' => "text:%s" % elb_name})
 
+    iterations = 0
     while not task.show.summary.include? 'completed'
-      # FIXME add a timeout
       $log.info('Waiting for add task to complete (%s).' % task.show.summary)
       sleep 1
 
       if task.show.summary.include? 'failed'
         abort('FAILED.  RightScript task failed!')
       end
+
+      iterations += 1
+      if iterations >= $RS_TIMEOUT
+        abort('Timeout waiting on RightScale task! (%s seconds)' % $RS_TIMEOUT)
+      end
     end
+
   end
 
   $log.info(post_msg % [server_array_name, elb_name])
@@ -161,9 +170,7 @@ def main()
   if args[:add]
     update_elb(right_client, args[:elb], args[:server_array],
                $RIGHT_SCRIPT['add'][args[:env]], args[:dryrun], 'add')
-  end
-
-  if args[:remove]
+  elsif args[:remove]
     update_elb(right_client, args[:elb], args[:server_array],
                $RIGHT_SCRIPT['remove'][args[:env]], args[:dryrun], 'remove')
   end
