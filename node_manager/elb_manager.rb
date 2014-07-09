@@ -14,13 +14,14 @@ require './node_manager'
 # They're unique to our accounts
 # Add - Connect instance to ELB
 # Remove - Disconnect instance from ELB
-$RS_ADD = {
-  'staging' => '/api/right_scripts/438671001',
-  'prod'    => '/api/right_scripts/232971001'
-}
-$RS_REMOVE = {
-  'staging' => '/api/right_scripts/396277001',
-  'prod' => '/api/right_scripts/232972001'
+
+$RIGHT_SCRIPT = {
+  'add'    => {
+    'staging' => '/api/right_scripts/438671001',
+    'prod'    => '/api/right_scripts/232971001' },
+  'remove' => {
+    'staging' => '/api/right_scripts/396277001',
+    'prod'     => '/api/right_scripts/232972001' }
 }
 
 # Parse command line arguments.  Some defaults come from node_manager.rb
@@ -119,29 +120,29 @@ end
 #   - +elb+ -> ELB name to add to or remove from.
 #   - +action+ -> Which action to perform, 'add' or 'remove'
 #
-def update_elb(right_client, elb, server_array, right_script, action)
+def update_elb(right_client, elb_name, server_array_name, right_script, dryrun,
+               action)
   if action == 'add'
-#    right_script = $RS_ADD[args[:env]]
     pre_msg   = 'Adding %s to %s'
     post_msg  = 'SUCCESS. Added %s to %s'
   elsif action == 'remove'
-#    right_script = $RS_REMOVE[args[:env]]
     pre_msg  = 'Removing %s from %s'
     post_msg = 'SUCCESS. Removed %s from %s'
   else
     abort('Action must be add or remove.')
   end
 
-  $log.info('Looking for server_array %s.' % server_array)
+  $log.info('Looking for server_array %s.' % server_array_name)
   server_array = find_server_array(:right_client => right_client,
-                                   :server_array_name => server_array)
+                                   :server_array_name => server_array_name)
 
-  $log.info(pre_msg % [server_array, elb])
-#  if args[:dryrun]
-#    $log.info('Dry run mode. Not operating on the ELB.')
-#  else
-    task = server_array.multi_run_executable(:right_script_href => right_script,
-                                             :inputs => {'ELB_NAME' => "text:%s" % elb})
+  $log.info(pre_msg % [server_array_name, elb_name])
+  if dryrun
+    $log.info('Dry run mode. Not operating on the ELB.')
+  else
+    task = server_array.multi_run_executable(
+             :right_script_href => right_script,
+             :inputs => {'ELB_NAME' => "text:%s" % elb_name})
 
     while not task.show.summary.include? 'completed'
       # FIXME add a timeout
@@ -152,23 +153,25 @@ def update_elb(right_client, elb, server_array, right_script, action)
         abort('FAILED.  RightScript task failed!')
       end
     end
-#  end
+  end
 
-  $log.info(post_msg % [server_array, elb])
+  $log.info(post_msg % [server_array_name, elb_name])
 end
 
 # Main function.
 #
 def main()
-  # Parse command line arguments
-  options = parse_arguments()
+  args = parse_arguments()
+  right_client = get_right_client(args)
 
-  if options[:add]
-    update_elb(options, 'add')
+  if args[:add]
+    update_elb(right_client, args[:elb], args[:server_array],
+               $RIGHT_SCRIPT['add'][args[:env]], args[:dryrun], 'add')
   end
 
-  if options[:remove]
-    update_elb(options, 'remove')
+  if args[:remove]
+    update_elb(right_client, args[:elb], args[:server_array],
+               $RIGHT_SCRIPT['remove'][args[:env]], args[:dryrun], 'remove')
   end
 end
 
