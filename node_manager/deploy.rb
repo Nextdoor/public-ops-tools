@@ -86,6 +86,8 @@ def main()
     elb_name = line[0]
     tmpl_server_array = line[1]
     # clone arrays in threads, wait, etc
+    # thread = Thread.new{clone_server_array(...)}
+    # thread.join
   end
 
   json.each do |line|

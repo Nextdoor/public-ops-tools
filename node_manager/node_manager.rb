@@ -3,7 +3,7 @@
 #
 # Command to clone or delete server arrays.
 #
-# Create server array: require --build_url
+# Clone server array: require --build_url
 # - Rundeck job fetches recent build urls
 #
 # Delete server array: require --release_number
@@ -172,7 +172,7 @@ def get_access_token(args)
   end
 end
 
-# Creates a server array.
+# Clones a server array.
 #
 # There are actually three steps:
 # 1. Clone from a server array template
@@ -193,16 +193,8 @@ end
 # * *Returns* :
 #   - a RightScale Resource instance representing the newly created server array
 #
-def create_server_array(args)
-  dryrun = args[:dryrun]
-  tmpl_server_array = args[:tmpl_server_array]
-  server_array_name = args[:server_array_name]
-  instances = args[:instances]
-  release_version = args[:release_version]
-  service = args[:service]
-  env = args[:env]
-  right_client = args[:right_client]
-  region = args[:region]
+def clone_server_array(dryrun, tmpl_server_array, server_array_name, instances,
+                       release_version, service, env, right_client, region)
 
   packages = service.split(',')
 
@@ -573,16 +565,16 @@ def main()
     end
   end
 
-  # Create a new server array
-  server_array = create_server_array(:right_client => right_client,
-                                     :instances => args[:instances],
-                                     :env => args[:env],
-                                     :tmpl_server_array => args[:tmpl_server_array],
-                                     :service => args[:service],
-                                     :dryrun => args[:dryrun],
-                                     :server_array_name => server_array_name,
-                                     :release_version => release_version,
-                                     :region => args[:region])
+  # Clone a new server array
+  server_array = clone_server_array(right_client,
+                                    args[:instances],
+                                    args[:env],
+                                    args[:tmpl_server_array],
+                                    args[:service],
+                                    args[:dryrun],
+                                    server_array_name,
+                                    release_version,
+                                    args[:region])
   if not args[:dryrun] and server_array.nil?
     abort("FAILED.")
   end
