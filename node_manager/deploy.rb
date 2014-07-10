@@ -25,7 +25,6 @@ def parse_arguments()
             'JSON file containing server array and ELB IDs.') do |json|
       options[:json] = json
     end
-
   end
 
   parser.parse!
@@ -48,18 +47,19 @@ end
 #
 def main()
   args = parse_arguments()
-  input = parse_json(args[:json])
+  right_client = get_right_client(args)
+  json = parse_json(args[:json])
 
-  input.each do |inputs|
-    elb_name = inputs[0]
-    tmpl_server_array = inputs[1]
-    # clone arrays in threads
+  json.each do |line|
+    elb_name = line[0]
+    tmpl_server_array = line[1]
+    # clone arrays in threads, wait, etc
   end
 
-  input.each do |inputs|
-    elb_name = inputs[0]
-    tmpl_server_array = inputs[1]
-    # add/remove from/to ELBs in threads
+  json.each do |line|
+    elb_name = line[0]
+    tmpl_server_array = line[1]
+    # add/remove from/to ELBs in threads, wait, etc
   end
 end
 

@@ -515,14 +515,11 @@ end
 #   - +api_version+ -> RightScale API version number
 #   - +api_url+ -> RightScale API URL
 #
-def get_right_client(args)
-  oauth2_api_url = args[:oauth2_api_url]
-  refresh_token = args[:refresh_token]
-  api_version = args[:api_version]
-  api_url = args[:api_url]
 
+def get_right_client(oauth2_api_url, refresh_token, api_version, api_url)
   # Fetch OAuth2 access token
-  client = RestClient::Resource.new(oauth2_api_url, :timeout => $DEFAULT_OAUTH_TIMEOUT)
+  client = RestClient::Resource.new(oauth2_api_url,
+                                    :timeout => $DEFAULT_OAUTH_TIMEOUT)
   access_token = get_access_token(:client => client,
                                   :refresh_token => refresh_token,
                                   :api_version => api_version)
@@ -540,30 +537,30 @@ end
 def main()
 
   # Parse command line arguments
-  options = parse_arguments()
+  args = parse_arguments()
 
-  if options[:dryrun]
+  if args[:dryrun]
     $log.info('Dryrun mode. Should be safe to run!')
   end
 
-  queue_prefix = options[:release_number]
-  if not options[:delete]
+  queue_prefix = args[:release_number]
+  if not args[:delete]
     # Get release version from build url
-    release_version = get_release_version(:build_url => options[:build_url])
+    release_version = get_release_version(:build_url => args[:build_url])
     queue_prefix = get_queue_prefix(:release_version => release_version)
   end
 
   # Construct server array name
   server_array_name = get_server_array_name(:queue_prefix => queue_prefix,
-                                            :service => options[:service],
-                                            :env => options[:env],
-                                            :region => options[:region])
+                                            :service => args[:service],
+                                            :env => args[:env],
+                                            :region => args[:region])
 
-  if options[:delete] and options[:taskworker]
-    queues_empty = are_queues_empty(:region => options[:region],
-                                    :env => options[:env],
-                                    :aws_access_key_id => options[:aws_access_key_id],
-                                    :aws_secret_access_key => options[:aws_secret_access_key],
+  if args[:delete] and args[:taskworker]
+    queues_empty = are_queues_empty(:region => args[:region],
+                                    :env => args[:env],
+                                    :aws_access_key_id => args[:aws_access_key_id],
+                                    :aws_secret_access_key => args[:aws_secret_access_key],
                                     :queue_prefix => queue_prefix)
     if not queues_empty
       abort("Cannot destroy #{server_array_name} unless all queues with prefix \"#{queue_prefix}\" are empty.")
@@ -571,13 +568,16 @@ def main()
   end
 
   # Instantiate the RightScale API
-  right_client = get_right_client(options)
+  right_client = get_right_client(args[:oauth2_api_url],
+                                  args[:refresh_token],
+                                  args[:api_version],
+                                  args[:api_url])
 
   server_array = find_server_array(:right_client => right_client,
                                    :server_array_name => server_array_name)
 
   if not server_array.nil?
-    if not options[:delete]
+    if not args[:delete]
       # In the case of creating a new server array.
       abort("Skip creating #{server_array_name}." +
             ' You can manually launch more nodes in that server array via RightScale Web UI.')
@@ -585,13 +585,13 @@ def main()
       # In the case of deleting a server array.
       delete_server_array(:server_array => server_array,
                           :right_client => right_client,
-                          :dryrun => options[:dryrun],
+                          :dryrun => args[:dryrun],
                           :server_array_name => server_array_name)
       $log.info("Finish deleting #{server_array_name}.")
       return
     end
   else
-    if options[:delete]
+    if args[:delete]
       $log.info("Nothing to delete.")
       return
     end
@@ -599,15 +599,15 @@ def main()
 
   # Create a new server array
   server_array = create_server_array(:right_client => right_client,
-                                     :instances => options[:instances],
-                                     :env => options[:env],
-                                     :tmpl_server_array => options[:tmpl_server_array],
-                                     :service => options[:service],
-                                     :dryrun => options[:dryrun],
+                                     :instances => args[:instances],
+                                     :env => args[:env],
+                                     :tmpl_server_array => args[:tmpl_server_array],
+                                     :service => args[:service],
+                                     :dryrun => args[:dryrun],
                                      :server_array_name => server_array_name,
                                      :release_version => release_version,
-                                     :region => options[:region])
-  if not options[:dryrun] and server_array.nil?
+                                     :region => args[:region])
+  if not args[:dryrun] and server_array.nil?
     abort("FAILED.")
   end
 end

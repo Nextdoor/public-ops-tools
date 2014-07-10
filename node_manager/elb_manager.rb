@@ -1,11 +1,11 @@
 # !/usr/bin/env ruby
 #
 # Command to add and remove entire RightScale server arrays to or from ELBs.
-# Intended for red/black deploys.  For instance
-# Use node_manager.rb to clone a new server array with upgraded packages
-# Use this script to add the entire new array to an an existing ELB
-# Use this script to remove the old instances in the old array from the ELB
-# After testing, use node_manager.rb to remove the old server array
+# Intended for red/black deploys.  For instance:
+# - Use node_manager.rb to clone a new server array with upgraded packages
+# - Use this script to add the entire new array to an an existing ELB
+# - Use this script to remove the old instances in the old array from the ELB
+# - After testing, use node_manager.rb to remove the old server array
 
 require 'optparse'
 require './node_manager'
@@ -165,8 +165,10 @@ end
 #
 def main()
   args = parse_arguments()
-  right_client = get_right_client(args)
-
+  right_client = get_right_client(args[:oauth2_api_url],
+                                  args[:refresh_token],
+                                  args[:api_version],
+                                  args[:api_url])
   if args[:add]
     update_elb(right_client, args[:elb], args[:server_array],
                $RIGHT_SCRIPT['add'][args[:env]], args[:dryrun], 'add')
