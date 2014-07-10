@@ -8,6 +8,7 @@
 # - After testing, use node_manager.rb to remove the old server array
 
 require 'optparse'
+require './get_right_client'
 require './node_manager'
 
 # These are the RightScale 'RightScripts' that add or remove from ELBs.
