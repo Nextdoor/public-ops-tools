@@ -1,3 +1,6 @@
+# Deploy
+This script uses Node Manager and ELB Manager to fully orchestrate deploys.
+
 ## Node Manager
 This script creates or deletes a server array via the RightScale API.
 

@@ -1,0 +1,11 @@
+{
+  "staging-api-uswest2": "dev-charles-redblack-uswest1",
+  "staging-frontend-uswest2": "dev-charles-redblack-uswest1",
+  "staging-frontend2-uswest2": "dev-charles-redblack-uswest1",
+  "staging-gnarfeed-uswest2": "dev-charles-redblack-uswest1",
+  "staging-gnarfeed2-uswest2": "dev-charles-redblack-uswest1",
+  "staging-melissadata-uswest2": "dev-charles-redblack-uswest1",
+  "staging-photos-uswest2": "dev-charles-redblack-uswest1",
+  "staging-tools-uswest2": "dev-charles-redblack-uswest1",
+  "staging-ts-uswest2": "dev-charles-redblack-uswest1"
+}

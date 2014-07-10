@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+# !/usr/bin/env ruby
 #
 # Command to add and remove entire RightScale server arrays to or from ELBs.
 # Intended for red/black deploys.  For instance

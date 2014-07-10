@@ -1,7 +1,7 @@
-#!/usr/bin/ruby
+# !/usr/bin/env ruby
 
 #
-# Command to create and delete server arrays.
+# Command to clone or delete server arrays.
 #
 # Create server array: require --build_url
 # - Rundeck job fetches recent build urls
