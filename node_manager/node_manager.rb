@@ -147,8 +147,9 @@ end
 # * *Returns* :
 #   - a RightScale Resource instance representing the newly created server array
 #
-def clone_server_array(dryrun, tmpl_server_array, server_array_name, instances,
-                       release_version, service, env, right_client, region)
+def clone_server_array(dryrun, right_client, tmpl_server_array,
+                       server_array_name, instances,
+                       release_version, service, env, region)
 
   packages = service.split(',')
 
@@ -187,8 +188,7 @@ def clone_server_array(dryrun, tmpl_server_array, server_array_name, instances,
     end
   end
 
-  new_server_array = find_server_array(:right_client => right_client,
-                                   :server_array_name => server_array_name)
+  new_server_array = find_server_array(right_client, server_array_name)
 
   # Wait for at least one instance to become operational.
   num_operational_instances = 0
@@ -300,7 +300,8 @@ def parse_arguments()
       options[:api_url] = api_url;
     end
 
-    opts.on('-v', '--api_version API_VERSION', 'RightScale API Version.') do |api_version|
+    opts.on('-v', '--api_version API_VERSION',
+            'RightScale API Version.') do |api_version|
       options[:api_version] = api_version;
     end
 
@@ -317,15 +318,18 @@ def parse_arguments()
       options[:region] = region;
     end
 
-    opts.on('-s', '--service SERVICE', 'The service that runs in this server array.') do |service|
+    opts.on('-s', '--service SERVICE',
+            'The service that runs in this server array.') do |service|
       options[:service] = service;
     end
 
-    opts.on('-t', '--refresh_token TOKEN', 'The refresh token for RightScale OAuth2.') do |refresh_token|
+    opts.on('-t', '--refresh_token TOKEN',
+            'The refresh token for RightScale OAuth2.') do |refresh_token|
       options[:refresh_token] = refresh_token;
     end
 
-    opts.on('-o', '--oauth2_api_url URL', 'RightScale OAuth2 URL.') do |oauth2_api_url|
+    opts.on('-o', '--oauth2_api_url URL',
+            'RightScale OAuth2 URL.') do |oauth2_api_url|
       options[:oauth2_api_url] = oauth2_api_url;
     end
 
@@ -334,15 +338,18 @@ def parse_arguments()
       options[:tmpl_server_array] = tmpl_server_array;
     end
 
-    opts.on('-b', '--build_url BUILD_URL', 'Jenkins Build URL for service package.') do |build_url|
+    opts.on('-b', '--build_url BUILD_URL',
+            'Jenkins Build URL for service package.') do |build_url|
       options[:build_url] = build_url;
     end
 
-    opts.on('-a', '--aws_access_key_id ACCESS_KEY', 'AWS_ACCESS_KEY_ID.') do |aws_access_key_id|
+    opts.on('-a', '--aws_access_key_id ACCESS_KEY',
+            'AWS_ACCESS_KEY_ID.') do |aws_access_key_id|
       options[:aws_access_key_id] = aws_access_key_id;
     end
 
-    opts.on('-k', '--aws_secret_access_key SECRET_KEY', 'AWS_SECRET_KEY_ID.') do |aws_secret_access_key|
+    opts.on('-k', '--aws_secret_access_key SECRET_KEY',
+            'AWS_SECRET_KEY_ID.') do |aws_secret_access_key|
       options[:aws_secret_access_key] = aws_secret_access_key;
     end
 
@@ -480,8 +487,7 @@ def main()
                                   args[:api_version],
                                   args[:api_url])
 
-  server_array = find_server_array(:right_client => right_client,
-                                   :server_array_name => server_array_name)
+  server_array = find_server_array(right_client, server_array_name)
 
   if not server_array.nil?
     if not args[:delete]
@@ -503,14 +509,13 @@ def main()
   end
 
   # Clone a new server array
-  server_array = clone_server_array(right_client,
-                                    args[:instances],
-                                    args[:env],
+  server_array = clone_server_array(args[:dryrun], right_client,
                                     args[:tmpl_server_array],
-                                    args[:service],
-                                    args[:dryrun],
                                     server_array_name,
+                                    args[:instances],
                                     release_version,
+                                    args[:service],
+                                    args[:env],
                                     args[:region])
   if not args[:dryrun] and server_array.nil?
     abort("FAILED.")

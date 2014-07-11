@@ -1,46 +1,55 @@
 {
   "staging-api-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
 
   "staging-frontend-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
 
   "staging-frontend2-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
   
   "staging-gnarfeed-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
 
   "staging-gnarfeed2-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
 
   "staging-melissadata-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
 
   "staging-photos-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
 
   "staging-tools-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   },
 
   "staging-ts-uswest2": {
     "tmpl_server_array": "dev-charles-redblack-uswest1",
-    "instances": 1
+    "instances": 1,
+	"service": "taskworker"
   }
 }

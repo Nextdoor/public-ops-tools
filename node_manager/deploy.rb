@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 
 # This script uses node_manager and elb_manager to deploy full environments.
-# Given a set of template server arrays and ELBs, we clone the server arrays
-# to create new ones.  Then we add the new server arrays to the existing ELBs,
-# and remove the old server arrays from the ELBs.  We perform these operations
-# in threads, so we can run operations concurrently.
+# Given a set of template server arrays and ELBs in JSON input, we clone the
+# server arrays to create new ones.  Then we add the new server arrays to the
+# existing ELBs, and remove the old server arrays from the ELBs.
+# We perform these operations in threads, so we can run operations concurrently.
 
 require 'rubygems'
 require 'json'
@@ -27,6 +27,7 @@ def parse_arguments()
     :api_url => $DEFAULT_API_URL,
     :dryrun => nil,
     :env => $DEFAULT_ENV,
+    :build_url => nil,
   }
 
   parser = OptionParser.new do|opts|
@@ -34,6 +35,11 @@ def parse_arguments()
 
     opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
       options[:env] = env;
+    end
+
+    opts.on('-b', '--build_url BUILD_URL',
+            'Jenkins Build URL for service package.') do |build_url|
+      options[:build_url] = build_url;
     end
 
     opts.on('-d', '--dryrun', 'Dryrun. Do not make changes.') do
@@ -76,6 +82,10 @@ def parse_arguments()
     abort('You must specify a refresh token.')
   end
 
+  if options[:build_url].nil?
+    abort('--build_url is required.')
+  end
+
   return options
 end
 
@@ -88,7 +98,8 @@ end
 
 
 def parse_json_line(line)
-  return line[0], line[1][0], line[1][1]
+  return line[0], line[1]['tmpl_server_array'], line[1]['instances'], \
+  line[1]['service'], line[1]['region']
 end
 
 # Main function.
@@ -100,20 +111,30 @@ def main()
                                   args[:api_version],
                                   args[:api_url])
 
+  release_version = get_release_version(args[:build_url])
+  queue_prefix = get_queue_prefix(release_version)
 
   json = parse_json_file(args[:json])
 
   json.each do |line|
-    elb_name, tmpl_server_array, num_instances = parse_json_line()
-    puts elb_name, tmpl_server_array, num_instances
+    elb_name, tmpl_array, instances, service, region = parse_json_line(line)
 
+    $log.info("Booting new instances for #{elb_name}...")
+
+    server_array_name = get_server_array_name(args[:env], region, service,
+                                              queue_prefix)
+    clone_server_array(args[:dryrun], right_client, tmpl_array,
+                       server_array_name, instances,
+                       release_version, service, args[:env], region)
+    
     # clone arrays in threads, wait, etc
     # thread = Thread.new{clone_server_array(...)}
     # thread.join
+    $log.info("Finished booting new instances for #{elb_name}.")
   end
 
   json.each do |line|
-    elb_name, tmpl_server_array, num_instances = parse_json_line()
+    elb_name, tmpl_array, instances, service, region = parse_json_line(line)
     # add/remove from/to ELBs in threads, wait, etc
   end
 end
