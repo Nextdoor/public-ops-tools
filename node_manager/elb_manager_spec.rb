@@ -21,7 +21,7 @@ describe 'update_elb' do
 
     it "should raise exception with bad action" do
       expect {
-        update_elb(@rs_mock, 'fake_elb', 'fake_sa', 'fake_url', false, 'bad')
+        update_elb(false, @rs_mock, 'fake_elb', 'fake_sa', 'fake_url', 'bad')
       }.to raise_error(/Action must be/)
     end
 
@@ -35,7 +35,7 @@ describe 'update_elb' do
         :right_script_href => 'fake_url',
         :inputs => { 'ELB_NAME' => 'text:foo_elb' } ) { @task_mock }
 
-      update_elb(@rs_mock, 'foo_elb', 'foo_sa', 'fake_url', false, 'add')
+      update_elb(false, @rs_mock, 'foo_elb', 'foo_sa', 'fake_url', 'add')
     end
 
     it "elb => foo_elb, server_array => foo_sa, action => remove" do
@@ -48,7 +48,7 @@ describe 'update_elb' do
         :right_script_href => 'fake_url',
         :inputs => { 'ELB_NAME' => 'text:foo_elb' } ) { @task_mock }
 
-      update_elb(@rs_mock, 'foo_elb', 'foo_sa', 'fake_url', false, 'remove')
+      update_elb(false, @rs_mock, 'foo_elb', 'foo_sa', 'fake_url', 'remove')
     end
 
   end

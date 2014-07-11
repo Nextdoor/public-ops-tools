@@ -9,9 +9,13 @@
 require 'rubygems'
 require 'json'
 
+require './get_logger'
 require './get_right_client'
 require './elb_manager'
 require './node_manager'
+
+# Global logger
+# $log = get_logger()
 
 # Parse command line arguments.  Some defaults come from node_manager.rb
 def parse_arguments()
@@ -21,10 +25,20 @@ def parse_arguments()
     :refresh_token => nil,
     :api_version => $DEFAULT_API_VERSION,
     :api_url => $DEFAULT_API_URL,
+    :dryrun => nil,
+    :env => $DEFAULT_ENV,
   }
 
   parser = OptionParser.new do|opts|
     opts.banner = "Usage: deploy.rb [options]"
+
+    opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
+      options[:env] = env;
+    end
+
+    opts.on('-d', '--dryrun', 'Dryrun. Do not make changes.') do
+      options[:dryrun] = true
+    end
 
     opts.on('-j', '--json JSON',
             'JSON file containing server array and ELB IDs.') do |json|
@@ -80,6 +94,17 @@ def main()
                                   args[:refresh_token],
                                   args[:api_version],
                                   args[:api_url])
+
+  tmpl_server_array = 'foo'
+  server_array_name = 'foo'
+  release_version = 1
+  service = 'foo'
+
+  clone_server_array(args[:dryrun], tmpl_server_array, server_array_name,
+                     $DEFAULT_NUM_INSTANCES, release_version, service,
+                     env, right_client, region)
+
+
   json = parse_json(args[:json])
 
   json.each do |line|
@@ -87,6 +112,10 @@ def main()
     tmpl_server_array = line[1]
     # clone arrays in threads, wait, etc
     # thread = Thread.new{clone_server_array(...)}
+
+#def clone_server_array(dryrun, tmpl_server_array, server_array_name,
+# instances, release_version, service, env, right_client, region)
+
     # thread.join
   end
 

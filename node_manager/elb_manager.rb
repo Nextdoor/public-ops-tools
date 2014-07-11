@@ -8,6 +8,8 @@
 # - After testing, use node_manager.rb to remove the old server array
 
 require 'optparse'
+
+require './get_logger'
 require './get_right_client'
 require './node_manager'
 
@@ -27,6 +29,9 @@ $RIGHT_SCRIPT = {
 
 # How many seconds we wait checking the add/remove task before giving up
 $RS_TIMEOUT = 300
+
+# Global logger
+$log = get_logger()
 
 # Parse command line arguments.  Some defaults come from node_manager.rb
 def parse_arguments()
@@ -118,7 +123,7 @@ def parse_arguments()
 end
 
 # Add or remove all instances of a server array to an ELB.
-def update_elb(right_client, elb_name, server_array_name, right_script, dryrun,
+def update_elb(dryrun, right_client, elb_name, server_array_name, right_script,
                action)
   if action == 'add'
     pre_msg   = 'Adding %s to %s'
@@ -171,11 +176,11 @@ def main()
                                   args[:api_version],
                                   args[:api_url])
   if args[:add]
-    update_elb(right_client, args[:elb], args[:server_array],
-               $RIGHT_SCRIPT['add'][args[:env]], args[:dryrun], 'add')
+    update_elb(args[:dryrun], right_client, args[:elb], args[:server_array],
+               $RIGHT_SCRIPT['add'][args[:env]], 'add')
   elsif args[:remove]
-    update_elb(right_client, args[:elb], args[:server_array],
-               $RIGHT_SCRIPT['remove'][args[:env]], args[:dryrun], 'remove')
+    update_elb(args[:dryrun], right_client, args[:elb], args[:server_array],
+               $RIGHT_SCRIPT['remove'][args[:env]], 'remove')
   end
 end
 
