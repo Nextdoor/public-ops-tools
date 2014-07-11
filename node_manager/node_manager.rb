@@ -52,8 +52,9 @@ def get_release_version(build_url)
   if /\d{8}-\d{6}~.+\.\w{7}/.match(release_version)
     return release_version
   else
-    $log.error('Malformed release version. A good release version looks like this:
-                20140409-035643~release-0007a.bb93bbc')
+    $log.error('Malformed release version.
+A good release version looks like this:
+20140409-035643~release-0007a.bb93bbc')
     abort('Exit due to malformed release version.')
   end
 end
@@ -90,8 +91,8 @@ end
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
 #   - +region+ -> string for AWS regions, e.g., uswest2
-#   - +service+ -> comma separated string for packages to install. The last package
-#                  is the service to run on the node.
+#   - +service+ -> comma separated string for packages to install.
+#                  The last package is the service to run on the node.
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
@@ -108,8 +109,8 @@ end
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
-#   - +service+ -> comma separated string for packages to install. The last package
-#                  is the service to run on the node.
+#   - +service+ -> comma separated string for packages to install.
+#                  The last package is the service to run on the node.
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
@@ -139,9 +140,12 @@ end
 #      "prod", "staging", and "dev"
 #   - +right_client+ -> instance for RightClient
 #   - +tmpl_server_array+ -> integer for the template server array id
-#   - +server_array_name+ -> string for server_array_name returned from get_server_array_name()
-#   - +instances+ -> integer for number of instances to create inside this server array
-#   - +release_version+ -> string for release version returned by get_release_version()
+#   - +server_array_name+ -> string for server_array_name returned from
+#                            get_server_array_name()
+#   - +instances+ -> integer for number of instances to create inside this
+#                    server array
+#   - +release_version+ -> string for release version returned by
+#                          get_release_version()
 #   - +region+ -> string for aws region
 #
 # * *Returns* :
@@ -156,12 +160,14 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
   # Clone a server array
   if dryrun
     $log.info("SUCCESS. Created server array #{server_array_name}")
-    $log.info("Will install #{packages[-1]}=#{release_version} for all instances.")
+    $log.info(
+      "Will install #{packages[-1]}=#{release_version} for all instances.")
     $log.info("Will launch #{instances} instances.")
     return
   end
 
-  new_server_array = right_client.server_arrays(:id => tmpl_server_array).show.clone
+  new_server_array = right_client.server_arrays(
+                       :id => tmpl_server_array).show.clone
 
   # Rename the newly created server array
   params = { :server_array => {
@@ -211,13 +217,15 @@ end
 #
 # * *Args*    :
 #   - +right_client+ -> instance of RightClient
-#   - +server_array_name+ -> string for server_array_name returned from get_server_array_name()
+#   - +server_array_name+ -> string for server_array_name returned from
+#                            get_server_array_name()
 #
 # * *Returns* :
 #   - Resource object for server array
 #
 def find_server_array(right_client, server_array_name)
-  server_arrays = right_client.server_arrays(:filter => ["name=="+server_array_name]).index
+  server_arrays = right_client.server_arrays(
+                    :filter => ["name=="+server_array_name]).index
   if server_arrays.nil? or server_arrays.size() == 0
     $log.info("NOT FOUND. #{server_array_name} is not found.")
     return nil
@@ -251,7 +259,8 @@ def are_queues_empty(aws_access_key_id, aws_secret_access_key, env, region,
   }
 
   server = region_to_server_map[region]
-  sqs = RightAws::SqsGen2.new(aws_access_key_id, aws_secret_access_key, {:server => server })
+  sqs = RightAws::SqsGen2.new(aws_access_key_id, aws_secret_access_key,
+                              {:server => server })
   queues = sqs.queues(prefix)
   queues.each { |queue|
     queue_depth = queue.size
@@ -310,7 +319,8 @@ def parse_arguments()
     end
 
     opts.on('-n', '--release_number NUM',
-            'Release number. E.g., if release_0007a, then the release_number is 0007a.') do |release_number|
+            'Release number. E.g., if release_0007a, then release_number=0007a.'
+            ) do |release_number|
       options[:release_number] = release_number.strip;
     end
 
