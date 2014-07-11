@@ -80,10 +80,15 @@ def parse_arguments()
 end
 
 # Parse provided JSON file and return output
-def parse_json(fname)
+def parse_json_file(fname)
   file = open(fname)
   json = file.read
   return JSON.parse(json)
+end
+
+
+def parse_json_line(line)
+  return line[0], line[1][0], line[1][1]
 end
 
 # Main function.
@@ -95,33 +100,20 @@ def main()
                                   args[:api_version],
                                   args[:api_url])
 
-  tmpl_server_array = 'foo'
-  server_array_name = 'foo'
-  release_version = 1
-  service = 'foo'
 
-  clone_server_array(args[:dryrun], tmpl_server_array, server_array_name,
-                     $DEFAULT_NUM_INSTANCES, release_version, service,
-                     env, right_client, region)
-
-
-  json = parse_json(args[:json])
+  json = parse_json_file(args[:json])
 
   json.each do |line|
-    elb_name = line[0]
-    tmpl_server_array = line[1]
+    elb_name, tmpl_server_array, num_instances = parse_json_line()
+    puts elb_name, tmpl_server_array, num_instances
+
     # clone arrays in threads, wait, etc
     # thread = Thread.new{clone_server_array(...)}
-
-#def clone_server_array(dryrun, tmpl_server_array, server_array_name,
-# instances, release_version, service, env, right_client, region)
-
     # thread.join
   end
 
   json.each do |line|
-    elb_name = line[0]
-    tmpl_server_array = line[1]
+    elb_name, tmpl_server_array, num_instances = parse_json_line()
     # add/remove from/to ELBs in threads, wait, etc
   end
 end
