@@ -17,25 +17,15 @@
 require 'rubygems'
 require 'optparse'
 require 'pp'
-#require 'right_api_client'
-#require 'right_aws'
 require 'uri'
 
-require './find_server_array'
-require './get_logger'
-require './get_right_client'
+require_relative 'defaults'
+require_relative 'find_server_array'
+require_relative 'get_logger'
+require_relative 'get_right_client'
 
 # Global logger
 $log = get_logger()
-
-$DEFAULT_NUM_INSTANCES = 3
-$DEFAULT_API_URL = 'https://my.rightscale.com'
-$DEFAULT_API_VERSION = '1.5'
-$DEFAULT_ENV = 'staging'
-$DEFAULT_REGION = 'uswest2'
-$DEFAULT_SERVICE_NAME = 'servicename'
-$DEFAULT_OAUTH2_API_URL = 'https://my.rightscale.com/api/oauth2'
-$DEFAULT_OAUTH_TIMEOUT = 15
 
 # Returns release version.
 #

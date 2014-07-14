@@ -12,6 +12,8 @@
 require 'rest-client'
 require 'right_api_client'
 
+require_relative 'defaults'
+
 def get_access_token(right_client, refresh_token, api_version)
   post_data = Hash.new()
   post_data['grant_type'] = 'refresh_token'

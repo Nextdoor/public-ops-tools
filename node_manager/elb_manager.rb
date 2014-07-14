@@ -9,27 +9,11 @@
 
 require 'optparse'
 
-require './find_server_array'
-require './get_logger'
-require './get_right_client'
-require './node_manager'
-
-# These are the RightScale 'RightScripts' that add or remove from ELBs.
-# They're unique to our accounts
-# Add - Connect instance to ELB
-# Remove - Disconnect instance from ELB
-
-$RIGHT_SCRIPT = {
-  'add'    => {
-    'staging' => '/api/right_scripts/438671001',
-    'prod'    => '/api/right_scripts/232971001' },
-  'remove' => {
-    'staging' => '/api/right_scripts/396277001',
-    'prod'     => '/api/right_scripts/232972001' }
-}
-
-# How many seconds we wait checking the add/remove task before giving up
-$RS_TIMEOUT = 300
+require_relative 'defaults'
+require_relative 'find_server_array'
+require_relative 'get_logger'
+require_relative 'get_right_client'
+require_relative 'node_manager'
 
 # Global logger
 $log = get_logger()
