@@ -16,7 +16,7 @@ require_relative 'elb_manager'
 require_relative 'node_manager'
 
 # Global logger
-# $log = get_logger()
+$log = get_logger()
 
 # Parse command line arguments.  Some defaults come from node_manager.rb
 def parse_arguments()
@@ -45,6 +45,7 @@ def parse_arguments()
 
     opts.on('-d', '--dryrun', 'Dryrun. Do not make changes.') do
       options[:dryrun] = true
+      $log.info('Dryrun is on.  Not making any changes')
     end
 
     opts.on('-j', '--json JSON',
@@ -124,10 +125,13 @@ def main()
 
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
-    clone_server_array(args[:dryrun], right_client, tmpl_array,
-                       server_array_name, instances,
-                       release_version, service, args[:env], region)
-    
+
+    if not args[:dryrun]
+      clone_server_array(args[:dryrun], right_client, tmpl_array,
+                         server_array_name, instances,
+                         release_version, service, args[:env], region)
+    end
+      
     # clone arrays in threads, wait, etc
     # thread = Thread.new{clone_server_array(...)}
     # thread.join

@@ -54,5 +54,6 @@ def get_right_client(oauth2_api_url, refresh_token, api_version, api_url)
   cookies[:rs_gbl] = access_token
   return RightApi::Client.new(:api_url => api_url,
                               :api_version => api_version,
-                              :cookies => cookies)
+                              :cookies => cookies,
+                              :timeout => $DEFAULT_OAUTH_TIMEOUT)
 end
