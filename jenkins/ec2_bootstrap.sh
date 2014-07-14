@@ -243,6 +243,9 @@ install_ruby() {
   # of RVM.
   apt-get --purge -y --force-yes remove ruby-rvm
   apt-get -y --force-yes -q install $RUBY_PACKAGES
+
+  # Su back to the Ubuntu user and install RVM under it
+  su -l ubuntu -c bash -c "curl -sSL https://get.rvm.io | bash -s stable --ruby"
 }
 
 function main() {
