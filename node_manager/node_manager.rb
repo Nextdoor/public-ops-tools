@@ -17,10 +17,11 @@
 require 'rubygems'
 require 'optparse'
 require 'pp'
-require 'right_api_client'
-require 'right_aws'
+#require 'right_api_client'
+#require 'right_aws'
 require 'uri'
 
+require './find_server_array'
 require './get_logger'
 require './get_right_client'
 
@@ -119,7 +120,7 @@ end
 def get_puppet_facts(region, service, env, release_version)
   packages = service.split(',')
   puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp="
-  for package in packages:
+  for package in packages
       puppet_facts += "#{package}=#{release_version} "
   end
   puppet_facts = puppet_facts.rstrip
@@ -211,29 +212,6 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
   end
 
   return new_server_array
-end
-
-# Find server array with the given name
-#
-# * *Args*    :
-#   - +right_client+ -> instance of RightClient
-#   - +server_array_name+ -> string for server_array_name returned from
-#                            get_server_array_name()
-#
-# * *Returns* :
-#   - Resource object for server array
-#
-def find_server_array(right_client, server_array_name)
-  server_arrays = right_client.server_arrays(
-                    :filter => ["name=="+server_array_name]).index
-  if server_arrays.nil? or server_arrays.size() == 0
-    $log.info("NOT FOUND. #{server_array_name} is not found.")
-    return nil
-  elsif server_arrays[0].name == server_array_name
-    $log.info("FOUND. #{server_array_name} exists.")
-    return server_arrays[0]
-  end
-  return nil
 end
 
 # Are all SQS queues empty?

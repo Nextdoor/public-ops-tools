@@ -9,6 +9,7 @@
 
 require 'optparse'
 
+require './find_server_array'
 require './get_logger'
 require './get_right_client'
 require './node_manager'
@@ -136,8 +137,11 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, right_script,
   end
 
   $log.info('Looking for server_array %s.' % server_array_name)
-  server_array = find_server_array(:right_client => right_client,
-                                   :server_array_name => server_array_name)
+  server_array = find_server_array(right_client, server_array_name)
+
+  if not server_array
+    abort("FAILED.  Could not find #{server_array_name}")
+  end
 
   $log.info(pre_msg % [server_array_name, elb_name])
   if dryrun

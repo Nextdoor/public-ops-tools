@@ -8,8 +8,7 @@ This script creates or deletes a server array via the RightScale API.
 This script adds entire server arrays to ELBs via the RightScale API.
 
 ### Setup
-
-    rake install
+RVM and Bundler are recommended.  Install dependencies with `bundler install`.
 
 ### Running Tests
 
