@@ -108,8 +108,7 @@ def parse_arguments()
 end
 
 # Add or remove all instances of a server array to an ELB.
-def update_elb(dryrun, right_client, elb_name, server_array_name, right_script,
-               action)
+def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
   if action == 'add'
     pre_msg   = 'Adding %s to %s'
     post_msg  = 'SUCCESS. Added %s to %s'
@@ -119,6 +118,8 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, right_script,
   else
     abort('Action must be add or remove.')
   end
+
+  right_script = $RIGHT_SCRIPT[action][env]
 
   $log.info('Looking for server_array %s.' % server_array_name)
   server_array = find_server_array(right_client, server_array_name)
@@ -164,12 +165,14 @@ def main()
                                   args[:api_version],
                                   args[:api_url])
   if args[:add]
-    update_elb(args[:dryrun], right_client, args[:elb], args[:server_array],
-               $RIGHT_SCRIPT['add'][args[:env]], 'add')
+    action = 'add'
   elsif args[:remove]
-    update_elb(args[:dryrun], right_client, args[:elb], args[:server_array],
-               $RIGHT_SCRIPT['remove'][args[:env]], 'remove')
+    action = 'remove'
   end
+
+  update_elb(args[:dryrun], right_client, args[:elb], args[:server_array],
+             args[:env], action)
+
 end
 
 #

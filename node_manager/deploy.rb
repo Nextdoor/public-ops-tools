@@ -101,7 +101,7 @@ end
 
 def parse_json_line(line)
   return line[0], line[1]['tmpl_server_array'], line[1]['instances'], \
-  line[1]['service'], line[1]['region']
+  line[1]['min_operational_instances'], line[1]['service'], line[1]['region']
 end
 
 # Main function.
@@ -118,8 +118,13 @@ def main()
 
   json = parse_json_file(args[:json])
 
+  # Keep a list of newly created server arrays so we can check if they have
+  # running instances with their min_operational_instances count
+  server_arrays = []
+
   json.each do |line|
-    elb_name, tmpl_array, instances, service, region = parse_json_line(line)
+    elb_name, tmpl_array, instances, min_operational_instances, \
+    service, region = parse_json_line(line)
 
     $log.info("Booting new instances for #{elb_name}...")
 
@@ -127,20 +132,41 @@ def main()
                                               queue_prefix)
 
     if not args[:dryrun]
-      clone_server_array(args[:dryrun], right_client, tmpl_array,
-                         server_array_name, instances,
-                         release_version, service, args[:env], region)
+      server_arrays.push(
+                         [clone_server_array(args[:dryrun], right_client,
+                                            tmpl_array, server_array_name,
+                                            instances, release_version,
+                                            service, args[:env], region),
+                          min_operational_instances])
     end
-      
-    # clone arrays in threads, wait, etc
-    # thread = Thread.new{clone_server_array(...)}
-    # thread.join
-    $log.info("Finished booting new instances for #{elb_name}.")
+  end
+
+  while true
+    operational_array_count = 0
+    for server_array_tuple in server_arrays
+      # checks if the server array has the min number of operational instances
+      if check_for_running_instances(server_array_tuple[0],
+                                     server_array_tuple[1])
+        operational_array_count += 1
+      end
+    end
+
+    # Break if all server arrays have the min number of operational instances
+    break if operational_array_count == server_arrays.length
+    $log.info("Waiting for instances to boot...")
+    sleep 60
   end
 
   json.each do |line|
-    elb_name, tmpl_array, instances, service, region = parse_json_line(line)
-    # add/remove from/to ELBs in threads, wait, etc
+    elb_name, tmpl_array, instances, min_operational_instances, \
+    service, region = parse_json_line(line)
+
+    server_array_name = get_server_array_name(args[:env], region, service,
+                                              queue_prefix)
+
+    update_elb(args[:dryrun], right_client, elb_name, server_array_name, 'add')
+
+    # how do we find/remove the old instances from the ELB?
   end
 end
 

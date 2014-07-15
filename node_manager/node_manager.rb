@@ -170,8 +170,8 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
   $log.info("SUCCESS. Created server array #{server_array_name}")
 
   puppet_facts = get_puppet_facts(region, service, env, release_version)
-  new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
-            'nd-puppet/config/facts' => puppet_facts})
+  #new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
+  #          'nd-puppet/config/facts' => puppet_facts})
   $log.info("Updated puppet input #{puppet_facts}.")
   $log.info("Will install #{service}=#{release_version} for all instances.")
 
@@ -187,22 +187,26 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
 
   new_server_array = find_server_array(right_client, server_array_name)
 
-  # Wait for at least one instance to become operational.
-  num_operational_instances = 0
-  while num_operational_instances == 0
-    $log.info("No any instance is operational ... wait for 1 min ...")
-    sleep 60
-    for instance in new_server_array.current_instances.index
-      if instance.state == 'operational'
-        num_operational_instances += 1
-        $log.info("At least one instance is operational.")
-        break
-      end
+  return new_server_array
+end
+
+def check_for_running_instances(server_array, min_operational_instances)
+  # Wait min_instances to become operational.
+  operational_instances = 0
+
+  for instance in server_array.current_instances.index
+    if instance.state == 'operational'
+      operational_instances += 1
     end
   end
 
-  return new_server_array
+  if operational_instances >= min_operational_instances
+    return true
+  else
+    return false
+  end
 end
+
 
 # Are all SQS queues empty?
 #
@@ -495,6 +499,12 @@ def main()
                                     args[:service],
                                     args[:env],
                                     args[:region])
+
+  while not check_for_running_instances(server_array, 1)
+    $log.info("Waiting for at least one instance to boot...")
+    sleep 60
+  end
+
   if not args[:dryrun] and server_array.nil?
     abort("FAILED.")
   end
