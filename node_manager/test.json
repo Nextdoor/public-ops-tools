@@ -1,0 +1,17 @@
+{
+  "dev-charles-elb-01-uswest1": {
+    "tmpl_server_array": "233348003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "service": "frontend",
+    "region": "uswest1"
+  },
+
+  "dev-charles-elb-02-uswest1": {
+    "tmpl_server_array": "233348003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "service": "api",
+    "region": "uswest1"
+  }
+}

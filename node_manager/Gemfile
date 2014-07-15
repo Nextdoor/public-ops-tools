@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+gem 'rest-client'
+gem 'right_api_client'
+gem 'rspec-core'
+gem 'rspec-mocks'
+gem 'rspec-expectations'

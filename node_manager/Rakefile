@@ -1,11 +1,8 @@
 require 'rake/testtask'
+require 'rubygems'
+require 'rspec/core/rake_task'
 
 task :default => [:test]
-
-task :install do
-    exec "gem install right_api_client"
-    exec "gem install right_aws"
-end
 
 Rake::TestTask.new do |t|
     t.libs << "test"
@@ -13,3 +10,6 @@ Rake::TestTask.new do |t|
     t.verbose = true
 end
 
+RSpec::Core::RakeTask.new(:spec, :args) do |t, args|
+    t.pattern = FileList['*_spec.rb']
+end
