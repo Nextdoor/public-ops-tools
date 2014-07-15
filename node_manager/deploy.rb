@@ -164,7 +164,8 @@ def main()
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
 
-    update_elb(args[:dryrun], right_client, elb_name, server_array_name, 'add')
+    update_elb(args[:dryrun], right_client, elb_name, server_array_name,
+               env[:env], 'add')
 
     # how do we find/remove the old instances from the ELB?
   end
