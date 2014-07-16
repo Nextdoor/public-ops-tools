@@ -1,4 +1,4 @@
-require_relative 'elb_manager'
+require './elb_manager'
 
 RSpec.configure do |config|
   config.mock_with :rspec do |c|

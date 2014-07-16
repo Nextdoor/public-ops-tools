@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'rest-client'
-gem 'right_api_client'
+gem 'mime-types', '1.25.1'  #  For older Rubies, but this breaks 'bundle'
+gem 'rest-client', '1.6.8'  # For older Rubies
+gem 'right_api_client', '1.5.16'
 gem 'rspec-core'
 gem 'rspec-mocks'
 gem 'rspec-expectations'

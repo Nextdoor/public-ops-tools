@@ -19,10 +19,10 @@ require 'optparse'
 require 'pp'
 require 'uri'
 
-require_relative 'defaults'
-require_relative 'find_server_array'
-require_relative 'get_logger'
-require_relative 'get_right_client'
+require './defaults'
+require './find_server_array'
+require './get_logger'
+require './get_right_client'
 
 # Global logger
 $log = get_logger()
