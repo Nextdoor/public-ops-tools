@@ -19,10 +19,10 @@ require 'optparse'
 require 'pp'
 require 'uri'
 
-require_relative 'defaults'
-require_relative 'find_server_array'
-require_relative 'get_logger'
-require_relative 'get_right_client'
+require './defaults'
+require './find_server_array'
+require './get_logger'
+require './get_right_client'
 
 # Global logger
 $log = get_logger()
@@ -145,6 +145,7 @@ end
 def clone_server_array(dryrun, right_client, tmpl_server_array,
                        server_array_name, instances,
                        release_version, service, env, region)
+  $log.debug("Cloning server array #{server_array_name}...")
 
   packages = service.split(',')
 
@@ -157,6 +158,7 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
     return
   end
 
+  $log.debug("Requesting clone array id #{tmpl_server_array}")
   new_server_array = right_client.server_arrays(
                        :id => tmpl_server_array).show.clone
 

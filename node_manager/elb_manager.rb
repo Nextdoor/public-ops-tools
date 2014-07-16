@@ -9,11 +9,11 @@
 
 require 'optparse'
 
-require_relative 'defaults'
-require_relative 'find_server_array'
-require_relative 'get_logger'
-require_relative 'get_right_client'
-require_relative 'node_manager'
+require './defaults'
+require './find_server_array'
+require './get_logger'
+require './get_right_client'
+require './node_manager'
 
 # Global logger
 $log = get_logger()

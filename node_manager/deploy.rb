@@ -9,11 +9,11 @@
 require 'rubygems'
 require 'json'
 
-require_relative 'defaults'
-require_relative 'get_logger'
-require_relative 'get_right_client'
-require_relative 'elb_manager'
-require_relative 'node_manager'
+require './defaults'
+require './get_logger'
+require './get_right_client'
+require './elb_manager'
+require './node_manager'
 
 # Global logger
 $log = get_logger()
