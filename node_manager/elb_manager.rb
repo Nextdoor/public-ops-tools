@@ -100,7 +100,7 @@ def parse_arguments()
     abort('You must specify a refresh token.')
   end
 
-  if not options[:env] == 'staging' and options[:env] == 'prod'
+  if options[:env] != 'staging' and options[:env] != 'prod'
     abort('env must be staging or prod.')
   end
 

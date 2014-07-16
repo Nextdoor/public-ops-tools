@@ -76,6 +76,10 @@ def parse_arguments()
 
   parser.parse!
 
+  if options[:env] != 'staging' and options[:env] != 'prod'
+    abort('env must be staging or prod.')
+  end
+
   if not options[:json]
     abort('You must provide a JSON input file.')
   end

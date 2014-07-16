@@ -354,6 +354,10 @@ def parse_arguments()
     abort('--refresh_token is required.')
   end
 
+  if options[:env] != 'staging' and options[:env] != 'prod'
+    abort('env must be staging or prod.')
+  end
+
   if options[:delete]
     if options[:taskworker]
       if options[:aws_access_key_id].nil?
