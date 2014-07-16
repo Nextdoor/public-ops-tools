@@ -1,9 +1,9 @@
-#!/usr/bin/ruby
+# !/usr/bin/env ruby
 
 #
-# Command to create and delete server arrays.
+# Command to clone or delete server arrays.
 #
-# Create server array: require --build_url
+# Clone server array: require --build_url
 # - Rundeck job fetches recent build urls
 #
 # Delete server array: require --release_number
@@ -15,25 +15,17 @@
 #
 
 require 'rubygems'
-
-require 'logger'
 require 'optparse'
 require 'pp'
-require 'right_api_client'
-require 'right_aws'
 require 'uri'
 
-$log = Logger.new(STDOUT)
-$log.level = Logger::INFO
+require_relative 'defaults'
+require_relative 'find_server_array'
+require_relative 'get_logger'
+require_relative 'get_right_client'
 
-$DEFAULT_NUM_INSTANCES = 3
-$DEFAULT_API_URL = 'https://my.rightscale.com'
-$DEFAULT_API_VERSION = '1.5'
-$DEFAULT_ENV = 'staging'
-$DEFAULT_REGION = 'uswest2'
-$DEFAULT_SERVICE_NAME = 'servicename'
-$DEFAULT_OAUTH2_API_URL = 'https://my.rightscale.com/api/oauth2'
-$DEFAULT_APP_GROUP = 'us1'
+# Global logger
+$log = get_logger()
 
 # Returns release version.
 #
@@ -43,8 +35,7 @@ $DEFAULT_APP_GROUP = 'us1'
 # * *Returns* :
 #   - string for release version, e.g.,
 #     20140409-035643~release-0007a.bb93bbc
-def get_release_version(args)
-  build_url = args[:build_url]
+def get_release_version(build_url)
   uri = URI.parse(build_url)
   decoded_path = URI.unescape(uri.path)
   parts = File.basename(decoded_path).split('_')
@@ -52,8 +43,9 @@ def get_release_version(args)
   if /\d{8}-\d{6}~.+\.\w{7}/.match(release_version)
     return release_version
   else
-    $log.error('Malformed release version. A good release version looks like this:
-                20140409-035643~release-0007a.bb93bbc')
+    $log.error('Malformed release version.
+A good release version looks like this:
+20140409-035643~release-0007a.bb93bbc')
     abort('Exit due to malformed release version.')
   end
 end
@@ -70,9 +62,7 @@ end
 # * *Returns* :
 #      String for queue prefix
 #
-def get_queue_prefix(args)
-  release_version = args[:release_version]
-
+def get_queue_prefix(release_version)
   parts = release_version.split('~')[1].split('.')
   sha = parts[1]
   release_parts = parts[0].split('-')
@@ -92,18 +82,14 @@ end
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
 #   - +region+ -> string for AWS regions, e.g., uswest2
-#   - +service+ -> comma separated string for packages to install. The last package
-#                  is the service to run on the node.
+#   - +service+ -> comma separated string for packages to install.
+#                  The last package is the service to run on the node.
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
 #   - string for server array name, e.g., prod-taskworker-0007a-uswest2
 #
-def get_server_array_name(args)
-  env = args[:env]
-  region = args[:region]
-  service = args[:service]
-  queue_prefix = args[:queue_prefix]
+def get_server_array_name(env, region, service, queue_prefix)
   packages = service.split(',')
   return "#{env}-#{packages[-1]}-#{queue_prefix}-#{region}"
 end
@@ -114,22 +100,17 @@ end
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
-#   - +service+ -> comma separated string for packages to install. The last package
-#                  is the service to run on the node.
+#   - +service+ -> comma separated string for packages to install.
+#                  The last package is the service to run on the node.
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
 #   - string for puppet facts
 #
-def get_puppet_facts(args)
-  region = args[:region]
-  service = args[:service]
-  env = args[:env]
-  app_group = args[:app_group]
-  release_version = args[:release_version]
+def get_puppet_facts(region, service, env, release_version)
   packages = service.split(',')
-  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:app_group=#{app_group}\",\"text:shard=#{region}\",\"text:nsp="
-  for package in packages:
+  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp="
+  for package in packages
       puppet_facts += "#{package}=#{release_version} "
   end
   puppet_facts = puppet_facts.rstrip
@@ -137,41 +118,7 @@ def get_puppet_facts(args)
   return puppet_facts
 end
 
-# Returns OAuth2 access token of RightScale.
-#
-# * *Args*    :
-#   - +refresh_token+ -> string for RightScale refresh token for OAuth2
-#   - +client+ -> instance of RestClient
-#   - +api_version+ -> string for RightScale version
-#
-# * *Returns* :
-#   - string for OAuth2 access token of RightScale
-#
-def get_access_token(args)
-  refresh_token = args[:refresh_token]
-  api_version = args[:api_version]
-  client = args[:client]
-
-  post_data = Hash.new()
-  post_data['grant_type'] = 'refresh_token'
-  post_data['refresh_token'] = refresh_token
-
-  client.post(post_data,
-              :X_API_VERSION => api_version,
-              :content_type => 'application/x-www-form-urlencoded',
-              :accept => '*/*') do |response, request, result|
-    data = JSON.parse(response)
-    case response.code
-    when 200
-      $log.info('SUCCESS. Got access token from RightScale.')
-      return data['access_token']
-    else
-      abort('FAILED. Failed to get access token.')
-    end
-  end
-end
-
-# Creates a server array.
+# Clones a server array.
 #
 # There are actually three steps:
 # 1. Clone from a server array template
@@ -184,52 +131,47 @@ end
 #      "prod", "staging", and "dev"
 #   - +right_client+ -> instance for RightClient
 #   - +tmpl_server_array+ -> integer for the template server array id
-#   - +server_array_name+ -> string for server_array_name returned from get_server_array_name()
-#   - +instances+ -> integer for number of instances to create inside this server array
-#   - +release_version+ -> string for release version returned by get_release_version()
+#   - +server_array_name+ -> string for server_array_name returned from
+#                            get_server_array_name()
+#   - +instances+ -> integer for number of instances to create inside this
+#                    server array
+#   - +release_version+ -> string for release version returned by
+#                          get_release_version()
 #   - +region+ -> string for aws region
 #
 # * *Returns* :
 #   - a RightScale Resource instance representing the newly created server array
 #
-def create_server_array(args)
-  dryrun = args[:dryrun]
-  tmpl_server_array = args[:tmpl_server_array]
-  server_array_name = args[:server_array_name]
-  instances = args[:instances]
-  release_version = args[:release_version]
-  service = args[:service]
-  env = args[:env]
-  app_group = args[:app_group]
-  right_client = args[:right_client]
-  region = args[:region]
+def clone_server_array(dryrun, right_client, tmpl_server_array,
+                       server_array_name, instances,
+                       release_version, service, env, region)
 
   packages = service.split(',')
 
   # Clone a server array
   if dryrun
     $log.info("SUCCESS. Created server array #{server_array_name}")
-    $log.info("Will install #{packages[-1]}=#{release_version} for all instances.")
+    $log.info(
+      "Will install #{packages[-1]}=#{release_version} for all instances.")
     $log.info("Will launch #{instances} instances.")
     return
   end
 
-  new_server_array = right_client.server_arrays(:id => tmpl_server_array).show.clone
+  new_server_array = right_client.server_arrays(
+                       :id => tmpl_server_array).show.clone
 
   # Rename the newly created server array
   params = { :server_array => {
       :name => server_array_name,
       :state => 'enabled'
   }}
+
   new_server_array.show.update(params)
   $log.info("SUCCESS. Created server array #{server_array_name}")
-  puppet_facts = get_puppet_facts(:region => region,
-                                  :service => service,
-                                  :app_group => app_group,
-                                  :env => env,
-                                  :release_version => release_version)
-  new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
-            'nd-puppet/config/facts' => puppet_facts})
+
+  puppet_facts = get_puppet_facts(region, service, env, release_version)
+  #new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
+  #          'nd-puppet/config/facts' => puppet_facts})
   $log.info("Updated puppet input #{puppet_facts}.")
   $log.info("Will install #{service}=#{release_version} for all instances.")
 
@@ -243,49 +185,28 @@ def create_server_array(args)
     end
   end
 
-  new_server_array = find_server_array(:right_client => right_client,
-                                   :server_array_name => server_array_name)
-
-  # Wait for at least one instance to become operational.
-  num_operational_instances = 0
-  while num_operational_instances == 0
-    $log.info("No any instance is operational ... wait for 1 min ...")
-    sleep 60
-    for instance in new_server_array.current_instances.index
-      if instance.state == 'operational'
-        num_operational_instances += 1
-        $log.info("At least one instance is operational.")
-        break
-      end
-    end
-  end
+  new_server_array = find_server_array(right_client, server_array_name)
 
   return new_server_array
 end
 
-# Find server array with the given name
-#
-# * *Args*    :
-#   - +right_client+ -> instance of RightClient
-#   - +server_array_name+ -> string for server_array_name returned from get_server_array_name()
-#
-# * *Returns* :
-#   - Resource object for server array
-#
-def find_server_array(args)
-  right_client = args[:right_client]
-  server_array_name = args[:server_array_name]
+def check_for_running_instances(server_array, min_operational_instances)
+  # Wait min_instances to become operational.
+  operational_instances = 0
 
-  server_arrays = right_client.server_arrays(:filter => ["name=="+server_array_name]).index
-  if server_arrays.nil? or server_arrays.size() == 0
-    $log.info("NOT FOUND. #{server_array_name} is not found.")
-    return nil
-  elsif server_arrays[0].name == server_array_name
-    $log.info("FOUND. #{server_array_name} exists.")
-    return server_arrays[0]
+  for instance in server_array.current_instances.index
+    if instance.state == 'operational'
+      operational_instances += 1
+    end
   end
-  return nil
+
+  if operational_instances >= min_operational_instances
+    return true
+  else
+    return false
+  end
 end
+
 
 # Are all SQS queues empty?
 #
@@ -297,12 +218,10 @@ end
 # * *Returns* :
 #   - true if all queues are empty; otherwise, false
 #
-def are_queues_empty(args)
-  aws_access_key_id = args[:aws_access_key_id]
-  aws_secret_access_key = args[:aws_secret_access_key]
-  env = args[:env]
-  region = args[:region]
-  prefix = env + '-' + args[:queue_prefix]
+def are_queues_empty(aws_access_key_id, aws_secret_access_key, env, region,
+                     queue_prefix)
+
+  prefix = env + '-' + queue_prefix
 
   region_to_server_map = {
     'uswest1' => 'sqs.us-west-1.amazonaws.com',
@@ -312,7 +231,8 @@ def are_queues_empty(args)
   }
 
   server = region_to_server_map[region]
-  sqs = RightAws::SqsGen2.new(aws_access_key_id, aws_secret_access_key, {:server => server })
+  sqs = RightAws::SqsGen2.new(aws_access_key_id, aws_secret_access_key,
+                              {:server => server })
   queues = sqs.queues(prefix)
   queues.each { |queue|
     queue_depth = queue.size
@@ -343,8 +263,7 @@ def parse_arguments()
     :aws_access_key_id => nil,
     :aws_secret_access_key => nil,
     :instances => $DEFAULT_NUM_INSTANCES,
-    :dryrun => false,
-    :app_group => $DEFAULT_APP_GROUP
+    :dryrun => false
   }
 
   parser = OptionParser.new do|opts|
@@ -362,7 +281,8 @@ def parse_arguments()
       options[:api_url] = api_url;
     end
 
-    opts.on('-v', '--api_version API_VERSION', 'RightScale API Version.') do |api_version|
+    opts.on('-v', '--api_version API_VERSION',
+            'RightScale API Version.') do |api_version|
       options[:api_version] = api_version;
     end
 
@@ -371,7 +291,8 @@ def parse_arguments()
     end
 
     opts.on('-n', '--release_number NUM',
-            'Release number. E.g., if release_0007a, then the release_number is 0007a.') do |release_number|
+            'Release number. E.g., if release_0007a, then release_number=0007a.'
+            ) do |release_number|
       options[:release_number] = release_number.strip;
     end
 
@@ -379,15 +300,18 @@ def parse_arguments()
       options[:region] = region;
     end
 
-    opts.on('-s', '--service SERVICE', 'The service that runs in this server array.') do |service|
+    opts.on('-s', '--service SERVICE',
+            'The service that runs in this server array.') do |service|
       options[:service] = service;
     end
 
-    opts.on('-t', '--refresh_token TOKEN', 'The refresh token for RightScale OAuth2.') do |refresh_token|
+    opts.on('-t', '--refresh_token TOKEN',
+            'The refresh token for RightScale OAuth2.') do |refresh_token|
       options[:refresh_token] = refresh_token;
     end
 
-    opts.on('-o', '--oauth2_api_url URL', 'RightScale OAuth2 URL.') do |oauth2_api_url|
+    opts.on('-o', '--oauth2_api_url URL',
+            'RightScale OAuth2 URL.') do |oauth2_api_url|
       options[:oauth2_api_url] = oauth2_api_url;
     end
 
@@ -396,15 +320,18 @@ def parse_arguments()
       options[:tmpl_server_array] = tmpl_server_array;
     end
 
-    opts.on('-b', '--build_url BUILD_URL', 'Jenkins Build URL for service package.') do |build_url|
+    opts.on('-b', '--build_url BUILD_URL',
+            'Jenkins Build URL for service package.') do |build_url|
       options[:build_url] = build_url;
     end
 
-    opts.on('-a', '--aws_access_key_id ACCESS_KEY', 'AWS_ACCESS_KEY_ID.') do |aws_access_key_id|
+    opts.on('-a', '--aws_access_key_id ACCESS_KEY',
+            'AWS_ACCESS_KEY_ID.') do |aws_access_key_id|
       options[:aws_access_key_id] = aws_access_key_id;
     end
 
-    opts.on('-k', '--aws_secret_access_key SECRET_KEY', 'AWS_SECRET_KEY_ID.') do |aws_secret_access_key|
+    opts.on('-k', '--aws_secret_access_key SECRET_KEY',
+            'AWS_SECRET_KEY_ID.') do |aws_secret_access_key|
       options[:aws_secret_access_key] = aws_secret_access_key;
     end
 
@@ -416,8 +343,8 @@ def parse_arguments()
       options[:instances] = instances.to_i
     end
 
-    opts.on('-g', '--app_group APP_GROUP', 'App group.') do |app_group|
-      options[:app_group] = app_group;
+    opts.on('-t', '--taskworker BOOLEAN', 'Is this a taskworker array?  If so, we check the queue before deleting.') do |taskworker|
+      options[:taskworker] = (taskworker == 'true')
     end
   end
 
@@ -428,11 +355,13 @@ def parse_arguments()
   end
 
   if options[:delete]
-    if options[:aws_access_key_id].nil?
-      abort('--aws_access_key_id is required.')
-    end
-    if options[:aws_secret_access_key].nil?
-      abort('--aws_secret_access_key is required.')
+    if options[:taskworker]
+      if options[:aws_access_key_id].nil?
+        abort('--aws_access_key_id is required.')
+      end
+      if options[:aws_secret_access_key].nil?
+        abort('--aws_secret_access_key is required.')
+      end
     end
     if options[:release_number].nil?
       abort('--release_number is required.')
@@ -461,12 +390,7 @@ end
 #   - +dryrun+ -> boolean for whether or not to dry run
 #   - +right_client+ -> instance for RightClient
 #
-def delete_server_array(args)
-  dryrun = args[:dryrun]
-  server_array_name = args[:server_array_name]
-  server_array = args[:server_array]
-  right_client = args[:right_client]
-
+def delete_server_array(dryrun, right_client, server_array_name, server_array)
   # Disable auto-scaling first
   if not dryrun
       params = { :server_array => {
@@ -497,8 +421,7 @@ def delete_server_array(args)
     while count > 0
       $log.info("#{count} instances of #{server_array.name} are still running ... wait for 1 min ...")
       sleep 60
-      server_array = find_server_array(:right_client => right_client,
-                                       :server_array_name => server_array_name)
+      server_array = find_server_array(right_client, server_array_name)
       count = server_array.instances_count
     end
   end
@@ -512,87 +435,77 @@ end
 # Main function.
 #
 def main()
-
   # Parse command line arguments
-  options = parse_arguments()
+  args = parse_arguments()
 
-  if options[:dryrun]
+  if args[:dryrun]
     $log.info('Dryrun mode. Should be safe to run!')
   end
 
-  queue_prefix = options[:release_number]
-  if not options[:delete]
+  queue_prefix = args[:release_number]
+  if not args[:delete]
     # Get release version from build url
-    release_version = get_release_version(:build_url => options[:build_url])
-    queue_prefix = get_queue_prefix(:release_version => release_version)
+    release_version = get_release_version(args[:build_url])
+    queue_prefix = get_queue_prefix(release_version)
   end
 
   # Construct server array name
-  server_array_name = get_server_array_name(:queue_prefix => queue_prefix,
-                                            :service => options[:service],
-                                            :env => options[:env],
-                                            :region => options[:region])
+  server_array_name = get_server_array_name(args[:env], args[:region],
+                                            args[:service], args[:queue_prefix])
 
-  if options[:delete]
-    queues_empty = are_queues_empty(:region => options[:region],
-                                    :env => options[:env],
-                                    :aws_access_key_id => options[:aws_access_key_id],
-                                    :aws_secret_access_key => options[:aws_secret_access_key],
-                                    :queue_prefix => queue_prefix)
+  if args[:delete] and args[:taskworker]
+    queues_empty = are_queues_empty(args[:aws_access_key_id],
+                                    args[:aws_secret_access_key],
+                                    args[:env], args[:region], queue_prefix)
+
     if not queues_empty
       abort("Cannot destroy #{server_array_name} unless all queues with prefix \"#{queue_prefix}\" are empty.")
     end
   end
 
-  # Fetch OAuth2 access token
-  client = RestClient::Resource.new(options[:oauth2_api_url],
-                                    :timeout => 15)
-  access_token = get_access_token(:client => client,
-                                  :refresh_token => options[:refresh_token],
-                                  :api_version => options[:api_version])
+  # Instantiate the RightScale API
+  right_client = get_right_client(args[:oauth2_api_url],
+                                  args[:refresh_token],
+                                  args[:api_version],
+                                  args[:api_url])
 
-  # Check if any server array having the same name, if yes, exit.
-  cookies = {}
-  cookies[:rs_gbl] = access_token
-  right_client = RightApi::Client.new(:api_url => options[:api_url],
-                                      :api_version => options[:api_version],
-                                      :cookies => cookies)
-  server_array = find_server_array(:right_client => right_client,
-                                   :server_array_name => server_array_name)
+  server_array = find_server_array(right_client, server_array_name)
 
   if not server_array.nil?
-    if not options[:delete]
+    if not args[:delete]
       # In the case of creating a new server array.
       abort("Skip creating #{server_array_name}." +
             ' You can manually launch more nodes in that server array via RightScale Web UI.')
     else
       # In the case of deleting a server array.
-      delete_server_array(:server_array => server_array,
-                          :right_client => right_client,
-                          :dryrun => options[:dryrun],
-                          :server_array_name => server_array_name)
+      delete_server_array(args[:dryrun], right_client, server_array_name,
+                          server_array)
       $log.info("Finish deleting #{server_array_name}.")
       return
     end
   else
-    if options[:delete]
+    if args[:delete]
       $log.info("Nothing to delete.")
       return
     end
   end
 
-  # Create a new server array
-  server_array = create_server_array(:right_client => right_client,
-                                     :instances => options[:instances],
-                                     :env => options[:env],
-                                     :app_group => options[:app_group],
-                                     :tmpl_server_array => options[:tmpl_server_array],
-                                     :service => options[:service],
-                                     :dryrun => options[:dryrun],
-                                     :server_array_name => server_array_name,
-                                     :release_version => release_version,
-                                     :region => options[:region])
-  if not options[:dryrun] and server_array.nil?
+  # Clone a new server array
+  server_array = clone_server_array(args[:dryrun], right_client,
+                                    args[:tmpl_server_array],
+                                    server_array_name,
+                                    args[:instances],
+                                    release_version,
+                                    args[:service],
+                                    args[:env],
+                                    args[:region])
+
+  while not check_for_running_instances(server_array, 1)
+    $log.info("Waiting for at least one instance to boot...")
+    sleep 60
+  end
+
+  if not args[:dryrun] and server_array.nil?
     abort("FAILED.")
   end
 end
