@@ -9,11 +9,11 @@
 
 require 'optparse'
 
-require_relative 'defaults'
-require_relative 'find_server_array'
-require_relative 'get_logger'
-require_relative 'get_right_client'
-require_relative 'node_manager'
+require './defaults'
+require './find_server_array'
+require './get_logger'
+require './get_right_client'
+require './node_manager'
 
 # Global logger
 $log = get_logger()
@@ -132,28 +132,29 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
   if dryrun
     $log.info('Dry run mode. Not operating on the ELB.')
   else
-    task = server_array.multi_run_executable(
+    return server_array.multi_run_executable(
              :right_script_href => right_script,
              :inputs => {'ELB_NAME' => "text:%s" % elb_name})
-
-    iterations = 0
-    while not task.show.summary.include? 'completed'
-      $log.info('Waiting for add task to complete (%s).' % task.show.summary)
-      sleep 1
-
-      if task.show.summary.include? 'failed'
-        abort('FAILED.  RightScript task failed!')
-      end
-
-      iterations += 1
-      if iterations >= $RS_TIMEOUT
-        abort('Timeout waiting on RightScale task! (%s seconds)' % $RS_TIMEOUT)
-      end
-    end
-
   end
 
   $log.info(post_msg % [server_array_name, elb_name])
+end
+
+def check_elb_task(task)
+  if task.show.summary.include? 'completed'
+    return true
+  elsif task.show.summary.include? 'failed'
+    abort('FAILED.  RightScript task failed!')
+  else
+    return false
+  end
+end
+
+def check_rs_timeout(iterations)
+  if iterations >= $RS_TIMEOUT
+    abort('Timeout waiting on RightScale task! (%s seconds)' % $RS_TIMEOUT)
+  end
+  sleep 1
 end
 
 # Main function.
@@ -170,9 +171,20 @@ def main()
     action = 'remove'
   end
 
-  update_elb(args[:dryrun], right_client, args[:elb], args[:server_array],
-             args[:env], action)
+  task = update_elb(args[:dryrun], right_client, args[:elb],
+                    args[:server_array], args[:env], action)
 
+  iterations = 0
+  while true
+    $log.info('Waiting for task to complete (%s).' % task.show.summary)
+    if check_elb_task(task)
+      $log.info('Task completed.')
+      break
+    end
+
+    iterations += 1
+    check_rs_timeout(iterations)
+  end
 end
 
 #

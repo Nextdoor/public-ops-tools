@@ -9,11 +9,11 @@
 require 'rubygems'
 require 'json'
 
-require_relative 'defaults'
-require_relative 'get_logger'
-require_relative 'get_right_client'
-require_relative 'elb_manager'
-require_relative 'node_manager'
+require './defaults'
+require './get_logger'
+require './get_right_client'
+require './elb_manager'
+require './node_manager'
 
 # Global logger
 $log = get_logger()
@@ -123,7 +123,9 @@ def main()
   json = parse_json_file(args[:json])
 
   # Keep a list of newly created server arrays so we can check if they have
-  # running instances with their min_operational_instances count
+  # running instances with their min_operational_instances count.  Each 
+  # element is another list/tuple of the array and it's
+  # min_operational_instances count
   server_arrays = []
 
   json.each do |line|
@@ -161,6 +163,9 @@ def main()
     sleep 60
   end
 
+  # Keep a list of update_elb tasks so we can check their status
+  elb_tasks = []
+
   json.each do |line|
     elb_name, tmpl_array, instances, min_operational_instances, \
     service, region = parse_json_line(line)
@@ -168,11 +173,31 @@ def main()
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
 
-    update_elb(args[:dryrun], right_client, elb_name, server_array_name,
-               args[:env], 'add')
-
-    # how do we find/remove the old instances from the ELB?
+    elb_tasks.push(
+                   update_elb(args[:dryrun], right_client, elb_name,
+                              server_array_name,args[:env], 'add'))
   end
+
+  iterations = 0
+  while true
+    completed_task_count = 0
+    for task in elb_tasks
+      if check_elb_task(task)
+        completed_task_count += 1
+      end
+    end
+          
+    break if completed_task_count == elb_tasks.length
+    $log.info("Waiting for ELB tasks to complete...")
+
+    iterations += 1
+    check_rs_timeout(iterations)
+  end
+
+  # how do we find/remove the old instances from the ELB?
+  # maybe check the ELBs and record the instances/arrays first...
+  # so we can remove them later
+  $log.info("Done!")
 end
 
 #

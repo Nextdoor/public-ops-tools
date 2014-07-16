@@ -1,5 +1,5 @@
 require 'test/unit'
-require_relative 'node_manager'
+require './node_manager'
 
 class String
   def code
