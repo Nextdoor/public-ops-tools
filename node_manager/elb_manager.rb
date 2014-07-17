@@ -132,7 +132,9 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
     abort('Action must be add or remove.')
   end
 
+  $log.debug("Grabbing #{action} and #{env}")
   right_script = $RIGHT_SCRIPT[action][env]
+  $log.debug("right_script is #{right_script}")
 
   $log.info('Looking for server_array %s.' % server_array_name)
   server_array = find_server_array(right_client, server_array_name)

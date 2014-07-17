@@ -11,5 +11,8 @@ Rake::TestTask.new do |t|
 end
 
 RSpec::Core::RakeTask.new(:spec, :args) do |t, args|
+    require 'bundler/setup'
+    Bundler.require
+
     t.pattern = FileList['*_spec.rb']
 end
