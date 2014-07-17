@@ -190,6 +190,18 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
   return new_server_array
 end
 
+# Are all the instances running?
+#
+# Count the sum of all operational instances in this server array and check if
+# there is enough of them to consider this array operational.
+#
+# * *Args*:
+#   - +server_array+ -> array object
+#   - +min_operational_instances+ -> number of expected instances to be considered 'operational'
+#
+# * *Returns*:
+#   - +boolean+ -> 
+#
 def check_for_running_instances(server_array, min_operational_instances)
   # Wait min_instances to become operational.
   operational_instances = 0

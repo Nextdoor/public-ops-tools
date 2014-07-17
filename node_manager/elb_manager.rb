@@ -108,6 +108,19 @@ def parse_arguments()
 end
 
 # Add or remove all instances of a server array to an ELB.
+# 
+# * *Args*:
+#   - +dryrun+ -> `boolean` to not invoke any API calls.
+#   - +right_client+ -> instance of RightClient as expected by find_server_array
+#   - +elb_name+ -> string for the name of the ELB
+#   - +server_array_name+ -> string for the server array name
+#   - +env+ -> string for environment (defaults.rb). Can be one of
+#     - staging
+#     - prod
+#   - +action+ -> string for rightscale action (defaults.rb). Can be one of
+#     - add
+#     - remove
+#
 def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
   if action == 'add'
     pre_msg   = 'Adding %s to %s'
