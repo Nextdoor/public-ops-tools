@@ -9,6 +9,7 @@
 #   - Resource object for server array
 #
 def find_server_array(right_client, server_array_name)
+  $log.debug('Using "%s" to find "%s"' % [right_client, server_array_name])
   server_arrays = right_client.server_arrays(
                     :filter => ["name=="+server_array_name]).index
   if server_arrays.nil? or server_arrays.size() == 0
