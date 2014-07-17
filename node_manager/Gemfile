@@ -1,5 +1,12 @@
 source 'https://rubygems.org'
 
+# Running this Gemfile with bundle may not work due to dependency hell.
+# You may need to run these installs manually, in this order:
+# gem install 'mime-types' -v '1.25.1'
+# gem install 'rest-client' -v '1.6.8'
+# gem install 'right_api_client' -v '1.5.16'
+# gem install rspec-core rspec-mocks rspec-expectations
+
 gem 'mime-types', '1.25.1'  #  For older Rubies, but this breaks 'bundle'
 gem 'rest-client', '1.6.8'  # For older Rubies
 gem 'right_api_client', '1.5.16'

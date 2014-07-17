@@ -30,6 +30,7 @@ def parse_arguments()
     :dryrun => nil,
     :env => $DEFAULT_ENV,
     :build_url => nil,
+    :old_build_url => nil,
   }
 
   parser = OptionParser.new do|opts|
@@ -42,6 +43,11 @@ def parse_arguments()
     opts.on('-b', '--build_url BUILD_URL',
             'Jenkins Build URL for service package.') do |build_url|
       options[:build_url] = build_url;
+    end
+
+    opts.on('-o', '--old_build_url OLD_BUILD_URL',
+            'Jenkins Build URL for the current install.') do |old_build_url|
+      options[:old_build_url] = old_build_url;
     end
 
     opts.on('-d', '--dryrun', 'Dryrun. Do not make changes.') do
@@ -93,6 +99,10 @@ def parse_arguments()
     abort('--build_url is required.')
   end
 
+  if options[:old_build_url].nil?
+    abort('--old_build_url is required.')
+  end
+
   return options
 end
 
@@ -103,7 +113,7 @@ def parse_json_file(fname)
   return JSON.parse(json)
 end
 
-
+# Split the given line and return the individual values
 def parse_json_line(line)
   return line[0], line[1]['tmpl_server_array'], line[1]['instances'], \
   line[1]['min_operational_instances'], line[1]['service'], line[1]['region']
@@ -121,7 +131,12 @@ def main()
   release_version = get_release_version(args[:build_url])
   queue_prefix = get_queue_prefix(release_version)
 
+  old_release_version = get_release_version(args[:old_build_url])
+  old_queue_prefix = get_queue_prefix(old_release_version)
+
   json = parse_json_file(args[:json])
+
+  #### Create new server arrays
 
   # Keep a list of newly created server arrays so we can check if they have
   # running instances with their min_operational_instances count.  Each
@@ -164,6 +179,9 @@ def main()
     sleep 60
   end
 
+
+  #### Add the new server arrays to ELBs
+
   # Keep a list of update_elb tasks so we can check their status
   elb_tasks = []
 
@@ -176,28 +194,30 @@ def main()
 
     elb_tasks.push(
                    update_elb(args[:dryrun], right_client, elb_name,
-                              server_array_name,args[:env], 'add'))
+                              server_array_name, args[:env], 'add'))
   end
 
-  iterations = 0
-  while true
-    completed_task_count = 0
-    for task in elb_tasks
-      if check_elb_task(task)
-        completed_task_count += 1
-      end
-    end
+  wait_for_elb_tasks(elb_tasks)
 
-    break if completed_task_count == elb_tasks.length
-    $log.info("Waiting for ELB tasks to complete...")
 
-    iterations += 1
-    check_rs_timeout(iterations)
+  #### Remove the old instances from the ELB
+
+  # Reset the list of tasks
+  elb_tasks = []
+
+  json.each do |line|
+    elb_name, tmpl_array, instances, min_operational_instances, \
+    service, region = parse_json_line(line)
+
+    old_server_array_name = get_server_array_name(args[:env], region, service,
+                                                  old_queue_prefix)
+
+    elb_tasks.push(update_elb(args[:dryrun], right_client, elb_name,
+                              old_server_array_name, args[:env], 'remove'))
   end
 
-  # how do we find/remove the old instances from the ELB?
-  # maybe check the ELBs and record the instances/arrays first...
-  # so we can remove them later
+  wait_for_elb_tasks(elb_tasks)
+
   $log.info("Done!")
 end
 

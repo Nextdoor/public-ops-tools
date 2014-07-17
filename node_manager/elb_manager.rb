@@ -153,6 +153,28 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
   $log.info(post_msg % [server_array_name, elb_name])
 end
 
+# Poll the given set of tasks for completion
+def wait_for_elb_tasks(tasks)
+  iterations = 0
+  while true
+    completed_task_count = 0
+    for task in tasks
+      if check_elb_task(task)
+        completed_task_count += 1
+      end
+    end
+
+    break if completed_task_count == tasks.length
+    $log.info("Waiting for ELB tasks to complete...")
+
+    iterations += 1
+    if iterations >= $RS_TIMEOUT
+      abort('Timeout waiting on RightScale task! (%s seconds)' % $RS_TIMEOUT)
+    end
+    sleep 1
+  end
+end
+
 def check_elb_task(task)
   if task.show.summary.include? 'completed'
     return true
@@ -161,13 +183,6 @@ def check_elb_task(task)
   else
     return false
   end
-end
-
-def check_rs_timeout(iterations)
-  if iterations >= $RS_TIMEOUT
-    abort('Timeout waiting on RightScale task! (%s seconds)' % $RS_TIMEOUT)
-  end
-  sleep 1
 end
 
 # Main function.
