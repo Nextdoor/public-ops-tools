@@ -20,3 +20,22 @@ def find_server_array(right_client, server_array_name)
   end
   return nil
 end
+
+# Find server arrays with the given name
+#
+# Simply a wrapper around right_client.server_arrays without all of the checks
+# above.  Returns multiple server arrays if the server_array_name filter
+# matches.
+#
+# * *Args*    :
+#   - +right_client+ -> instance of RightClient
+#   - +server_array_name+ -> string for server_array_name returned from
+#                            get_server_array_name()
+#
+# * *Returns* :
+#   - Resource object for server array(s)
+#
+def find_server_arrays(right_client, server_array_name)
+  return right_client.server_arrays(
+           :filter => ["name=="+server_array_name]).index
+end

@@ -166,6 +166,11 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
       :state => 'enabled'
   }}
 
+  # Repeated calls with the same server_array_name can lead to failures
+  # since RightScale uses the old name with 'v1' appended.  This sleeping
+  # gives the rename time to complete.
+  sleep 5
+
   new_server_array.show.update(params)
   $log.info("SUCCESS. Created server array #{server_array_name}")
 
