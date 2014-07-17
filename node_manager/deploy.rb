@@ -116,7 +116,7 @@ end
 # Split the given line and return the individual values
 def parse_json_line(line)
   return line[0], line[1]['tmpl_server_array'], line[1]['instances'], \
-  line[1]['min_operational_instances'], line[1]['service'], line[1]['region']
+  line[1]['min_operational_instances'], line[1]['elb_name'], line[1]['region']
 end
 
 # Main function.
@@ -145,8 +145,8 @@ def main()
   server_arrays = []
 
   json.each do |line|
-    elb_name, tmpl_array, instances, min_operational_instances, \
-    service, region = parse_json_line(line)
+    service, tmpl_array, instances, min_operational_instances, \
+    elb_name, region = parse_json_line(line)
 
     $log.info("Booting new instances for #{elb_name}...")
 
@@ -186,8 +186,8 @@ def main()
   elb_tasks = []
 
   json.each do |line|
-    elb_name, tmpl_array, instances, min_operational_instances, \
-    service, region = parse_json_line(line)
+    service, tmpl_array, instances, min_operational_instances, \
+    elb_name, region = parse_json_line(line)
 
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
@@ -206,8 +206,8 @@ def main()
   elb_tasks = []
 
   json.each do |line|
-    elb_name, tmpl_array, instances, min_operational_instances, \
-    service, region = parse_json_line(line)
+    service, tmpl_array, instances, min_operational_instances, \
+    elb_name, region = parse_json_line(line)
 
     old_server_array_name = get_server_array_name(args[:env], region, service,
                                                   old_queue_prefix)

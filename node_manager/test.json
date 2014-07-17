@@ -1,17 +1,17 @@
 {
-  "dev-charles-elb-01-uswest1": {
+  "charles01": {
     "tmpl_server_array": "233094003",
     "instances": 1,
     "min_operational_instances": 1,
-    "service": "charles01",
+    "elb_name":" dev-charles-elb-01-uswest1",
     "region": "uswest1"
   },
 
-  "dev-charles-elb-02-uswest1": {
+  "charles02": {
     "tmpl_server_array": "233094003",
     "instances": 1,
     "min_operational_instances": 1,
-    "service": "charles02",
+    "elb_name": "dev-charles-elb-02-uswest1",
     "region": "uswest1"
   }
 }
