@@ -112,8 +112,6 @@ end
 #
 # * *Args*    :
 #   - +region+ -> string for AWS regions, e.g., uswest2
-#   - +env+ -> string for deployment environment, should be one of
-#      "prod", "staging", and "dev"
 #   - +service+ -> comma separated string for packages to install. The last package
 #                  is the service to run on the node.
 #   - +release_version+ -> string for the value returned by get_release_version
@@ -124,11 +122,10 @@ end
 def get_puppet_facts(args)
   region = args[:region]
   service = args[:service]
-  env = args[:env]
   app_group = args[:app_group]
   release_version = args[:release_version]
   packages = service.split(',')
-  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:app_group=#{app_group}\",\"text:shard=#{region}\",\"text:nsp="
+  puppet_facts = "array:[\"text:app_group=#{app_group}\",\"text:nsp="
   for package in packages:
       puppet_facts += "#{package}=#{release_version} "
   end
@@ -226,7 +223,6 @@ def create_server_array(args)
   puppet_facts = get_puppet_facts(:region => region,
                                   :service => service,
                                   :app_group => app_group,
-                                  :env => env,
                                   :release_version => release_version)
   new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
             'nd-puppet/config/facts' => puppet_facts})
