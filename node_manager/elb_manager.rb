@@ -177,6 +177,16 @@ def wait_for_elb_tasks(tasks)
   end
 end
 
+# Check if an ELB task has completed
+#
+# * *Args*:
+#   - +task+ -> a Task object that has a summary.
+#
+# * *Returns*:
+#   - +boolean+ -> true = completed, false = incomplete
+#
+# * *Raises*:
+#   - +abort+ -> if a task has explicitly failed.
 def check_elb_task(task)
   if task.show.summary.include? 'completed'
     return true
