@@ -1,18 +1,12 @@
-require 'rake/testtask'
 require 'rubygems'
 require 'rspec/core/rake_task'
+require 'bundler/setup'
 
-task :default => [:test]
+Bundler.require
 
-Rake::TestTask.new do |t|
-    t.libs << "test"
-    t.test_files = FileList['*test.rb']
-    t.verbose = true
-end
+task :default => [:spec]
 
 RSpec::Core::RakeTask.new(:spec, :args) do |t, args|
-    require 'bundler/setup'
-    Bundler.require
 
     t.pattern = FileList['*_spec.rb']
 end
