@@ -161,6 +161,7 @@ def wait_for_elb_tasks(tasks)
   while true
     completed_task_count = 0
     for task in tasks
+      $log.debug('Checking task "%s"' % task)
       if check_elb_task(task)
         completed_task_count += 1
       end
