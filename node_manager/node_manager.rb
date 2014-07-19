@@ -100,21 +100,19 @@ end
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
-#   - +service+ -> comma separated string for packages to install.
-#                  The last package is the service to run on the node.
+#   - +nsp+ -> space seperated list of NSPs to install.
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
 #   - string for puppet facts
 #
-def get_puppet_facts(region, service, env, release_version)
-  packages = service.split(',')
-  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp="
-  for package in packages
-      puppet_facts += "#{package}=#{release_version} "
+def get_puppet_facts(region, nsp, env, release_version)
+  packages = ''
+  for package in nsp.split()
+    packages = "#{packages} #{package}=#{release_version}"
   end
-  puppet_facts = puppet_facts.rstrip
-  puppet_facts += '"]'
+  packages = packages.lstrip.rstrip
+  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp=#{packages}\"]"
   return puppet_facts
 end
 
@@ -137,6 +135,7 @@ end
 #                    server array
 #   - +release_version+ -> string for release version returned by
 #                          get_release_version()
+#   - +nsp+ -> space seperated list of NSPs to install, version will be appended
 #   - +region+ -> string for aws region
 #
 # * *Returns* :
@@ -144,15 +143,12 @@ end
 #
 def clone_server_array(dryrun, right_client, tmpl_server_array,
                        server_array_name, instances,
-                       release_version, service, env, region)
-
-  packages = service.split(',')
+                       release_version, service, env, nsp, region)
 
   # Clone a server array
   if dryrun
     $log.info("SUCCESS. Created server array #{server_array_name}")
-    $log.info(
-      "Will install #{packages[-1]}=#{release_version} for all instances.")
+    $log.info("Will install #{service}=#{release_version} for all instances.")
     $log.info("Will launch #{instances} instances.")
     return
   end
@@ -175,9 +171,9 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
 
   $log.info("SUCCESS. Created server array #{server_array_name}")
 
-  puppet_facts = get_puppet_facts(region, service, env, release_version)
-  #new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
-  #          'nd-puppet/config/facts' => puppet_facts})
+  puppet_facts = get_puppet_facts(region, nsp, env, release_version)
+  new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
+    'nd-puppet/config/facts' => puppet_facts})
   $log.info("Updated puppet input #{puppet_facts}.")
   $log.info("Will install #{service}=#{release_version} for all instances.")
 
