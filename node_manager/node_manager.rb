@@ -82,39 +82,52 @@ end
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
 #   - +region+ -> string for AWS regions, e.g., uswest2
-#   - +service+ -> comma separated string for packages to install.
-#                  The last package is the service to run on the node.
+#   - +service+ -> name of the service running on this array
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
 #   - string for server array name, e.g., prod-taskworker-0007a-uswest2
 #
 def get_server_array_name(env, region, service, queue_prefix)
-  packages = service.split(',')
-  return "#{env}-#{packages[-1]}-#{queue_prefix}-#{region}"
+  return "#{env}-#{service}-#{queue_prefix}-#{region}"
 end
 
 # Constructs puppet facts string for server array input.
 #
 # * *Args*    :
+#   - +old_inputs+ -> Array of all RS inputs from the template used to append
+#        release version to NSP facts
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
-#   - +service+ -> comma separated string for packages to install.
-#                  The last package is the service to run on the node.
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
 #   - string for puppet facts
 #
-def get_puppet_facts(region, service, env, release_version)
-  packages = service.split(',')
-  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp="
-  for package in packages
-      puppet_facts += "#{package}=#{release_version} "
+def get_puppet_facts(old_inputs, region, env, release_version)
+  for input in old_inputs
+    if input.name == 'nd-puppet/config/facts'
+      old_facts = input.value
+    end
   end
-  puppet_facts = puppet_facts.rstrip
-  puppet_facts += '"]'
+
+  # Example of old_facts before a split:
+  #   array:nsp=nextdoor.com api,app_group=staging-us1
+  # We also support replacing 'installed' with a version #, so this is valid
+  #   array:nsp=nextdoor.com=installed api=installed,app_group=staging-us1
+  old_facts = old_facts.split(':')[1]
+  new_facts = []
+  for fact in old_facts.split(',')
+    if fact.start_with? 'nsp='
+      fact = fact.gsub('installed', release_version)
+    end
+    new_facts.push(fact)
+  end
+
+  puppet_facts = "array:[\"text:"
+  puppet_facts = puppet_facts + new_facts.join(', ')
+  puppet_facts = puppet_facts + "\"]"
   return puppet_facts
 end
 
@@ -144,13 +157,9 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
                        server_array_name,
                        release_version, service, env, region)
 
-  packages = service.split(',')
-
   # Clone a server array
   if dryrun
     $log.info("SUCCESS. Created server array #{server_array_name}")
-    $log.info(
-      "Will install #{packages[-1]}=#{release_version} for all instances.")
     return
   end
 
@@ -174,11 +183,12 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
 
   $log.info("SUCCESS. Created server array #{server_array_name}")
 
-  puppet_facts = get_puppet_facts(region, service, env, release_version)
-  #new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
-  #          'nd-puppet/config/facts' => puppet_facts})
+  puppet_facts = get_puppet_facts(
+                   new_server_array.show.next_instance.show.inputs.index,
+                   region, env, release_version)
+  new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
+    'nd-puppet/config/facts' => puppet_facts})
   $log.info("Updated puppet input #{puppet_facts}.")
-  $log.info("Will install #{service}=#{release_version} for all instances.")
 
   # Launch new instances
   for i in 1..instances
@@ -190,7 +200,10 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
     end
   end
 
-  new_server_array = find_server_array(right_client, server_array_name)
+  new_server_array = nil
+  while not new_server_array
+    new_server_array = find_server_array(right_client, server_array_name)
+  end
 
   return new_server_array
 end
@@ -307,6 +320,7 @@ def node_parse_arguments()
       options[:env] = env;
     end
 
+    # TODO FIXME XXX use the build URL instead of the CLI arg
     opts.on('-n', '--release_number NUM',
             'Release number. E.g., if release_0007a, then release_number=0007a.'
             ) do |release_number|
@@ -318,7 +332,7 @@ def node_parse_arguments()
     end
 
     opts.on('-s', '--service SERVICE',
-            'The service that runs in this server array.') do |service|
+            'Name of the service that runs in this server array.') do |service|
       options[:service] = service;
     end
 
@@ -472,7 +486,7 @@ def main()
 
   # Construct server array name
   server_array_name = get_server_array_name(args[:env], args[:region],
-                                            args[:service], args[:queue_prefix])
+                                            args[:service], queue_prefix)
 
   if args[:delete] and args[:taskworker]
     queues_empty = are_queues_empty(args[:aws_access_key_id],
