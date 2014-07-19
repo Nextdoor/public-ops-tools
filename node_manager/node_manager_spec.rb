@@ -44,19 +44,30 @@ describe 'get_server_array_name' do
     expect(queue_prefix).to eq('staging-fe-0008a-uswest1')
 
     queue_prefix = get_server_array_name(
-        'staging', 'uswest1', 'nextdoor.com,taskworker', '0008a')
+        'staging', 'uswest1', 'taskworker', '0008a')
     expect(queue_prefix).to eq('staging-taskworker-0008a-uswest1')
   end
 end
 
 describe 'get_puppet_facts' do
-  it 'should create porper puppet array' do
-    facts = get_puppet_facts(
-     'uswest1', 'nextdoor.com,taskworker', 'prod', 'abcd')
+  class FakeInputs
+    @@name = 'nd-puppet/config/facts'
+    @@value = 'array:nsp=nextdoor.com=installed taskworker=installed,app_group=us1'
+
+    def self.name
+      @@name
+    end
+
+    def self.value
+      @@value
+    end
+  end
+
+  it 'should create proper puppet array' do
+    facts = get_puppet_facts([FakeInputs], 'uswest1', 'prod', 'abcd')
+
     expect(facts).to eq(
-        'array:["text:base_class=node_prod::nsp","text:shard=uswest1",'\
-        '"text:nsp=nextdoor.com=abcd taskworker=abcd"]'
-    )
+        'array:["text:nsp=nextdoor.com=abcd taskworker=abcd, app_group=us1"]')
   end
 end
 

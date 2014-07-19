@@ -8,7 +8,6 @@
 # * *Returns* :
 #   - string for OAuth2 access token of RightScale
 #
-
 require 'rest-client'
 require 'right_api_client'
 
