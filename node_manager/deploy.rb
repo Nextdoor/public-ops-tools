@@ -145,10 +145,10 @@ def main()
   server_arrays = []
 
   json.each do |line|
-    service, tmpl_array, instances, min_operational_instances, \
-    elb_name, region = parse_json_line(line)
+    service, tmpl_array, instances, min_operational_instances, elb_name,
+    region = parse_json_line(line)
 
-    $log.info("Booting new instances for #{elb_name}...")
+    $log.info("Booting new instances for #{service}...")
 
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
@@ -186,15 +186,17 @@ def main()
   elb_tasks = []
 
   json.each do |line|
-    service, tmpl_array, instances, min_operational_instances, \
-    elb_name, region = parse_json_line(line)
+    service, tmpl_array, instances, min_operational_instances, elb_name, \
+    region = parse_json_line(line)
 
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
 
-    elb_tasks.push(
-                   update_elb(args[:dryrun], right_client, elb_name,
-                              server_array_name, args[:env], 'add'))
+    if not elb_name.empty?
+      elb_tasks.push(
+                     update_elb(args[:dryrun], right_client, elb_name,
+                                server_array_name, args[:env], 'add'))
+    end
   end
 
   wait_for_elb_tasks(elb_tasks)
@@ -206,14 +208,16 @@ def main()
   elb_tasks = []
 
   json.each do |line|
-    service, tmpl_array, instances, min_operational_instances, \
-    elb_name, region = parse_json_line(line)
+    service, tmpl_array, instances, min_operational_instances, elb_name, \
+    region = parse_json_line(line)
 
     old_server_array_name = get_server_array_name(args[:env], region, service,
                                                   old_queue_prefix)
 
-    elb_tasks.push(update_elb(args[:dryrun], right_client, elb_name,
+    if not elb_name.empty?
+      elb_tasks.push(update_elb(args[:dryrun], right_client, elb_name,
                               old_server_array_name, args[:env], 'remove'))
+    end
   end
 
   wait_for_elb_tasks(elb_tasks)
