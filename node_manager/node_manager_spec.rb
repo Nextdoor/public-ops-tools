@@ -1,3 +1,6 @@
+require 'rubygems'
+require 'rspec/autorun'
+require 'rspec/core'
 require './node_manager'
 
 RSpec.configure do |config|

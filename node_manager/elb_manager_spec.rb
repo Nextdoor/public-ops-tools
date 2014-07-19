@@ -1,14 +1,15 @@
+require 'rubygems'
+require 'rspec/autorun'
+require 'rspec/core'
 require './elb_manager'
-require './get_logger'
 
 RSpec.configure do |config|
   config.mock_with :rspec do |c|
-    c.syntax = [:should, :expect]
+    c.syntax = [:expect]
   end
 end
 
 describe 'update_elb' do
-  describe 'update_elb checks' do
 
     before :each do
       # Create a mocked object to track RightScale API calls
@@ -53,7 +54,6 @@ describe 'update_elb' do
       update_elb(false, @rs_mock, 'foo_elb', 'foo_sa', 'staging', 'remove')
     end
 
-  end
 end
 
 
