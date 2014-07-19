@@ -116,7 +116,8 @@ end
 # Split the given line and return the individual values
 def parse_json_line(line)
   return line[0], line[1]['tmpl_server_array'], line[1]['instances'], \
-  line[1]['min_operational_instances'], line[1]['elb_name'], line[1]['region']
+  line[1]['min_operational_instances'], line[1]['elb_name'], line[1]['nsp'],\
+  line[1]['region']
 end
 
 # Main function.
@@ -146,9 +147,9 @@ def main()
 
   json.each do |line|
     service, tmpl_array, instances, min_operational_instances, \
-    elb_name, region = parse_json_line(line)
+    elb_name, nsp, region = parse_json_line(line)
 
-    $log.info("Booting new instances for #{elb_name}...")
+    $log.info("Booting new instances for #{service}...")
 
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
@@ -158,7 +159,7 @@ def main()
                          [clone_server_array(args[:dryrun], right_client,
                                             tmpl_array, server_array_name,
                                             instances, release_version,
-                                            service, args[:env], region),
+                                            service, args[:env], nsp, region),
                           min_operational_instances])
     end
   end
@@ -187,14 +188,16 @@ def main()
 
   json.each do |line|
     service, tmpl_array, instances, min_operational_instances, \
-    elb_name, region = parse_json_line(line)
+    elb_name, nsp, region = parse_json_line(line)
 
     server_array_name = get_server_array_name(args[:env], region, service,
                                               queue_prefix)
 
-    elb_tasks.push(
-                   update_elb(args[:dryrun], right_client, elb_name,
-                              server_array_name, args[:env], 'add'))
+    if not elb_name.empty?
+      elb_tasks.push(
+                     update_elb(args[:dryrun], right_client, elb_name,
+                                server_array_name, args[:env], 'add'))
+    end
   end
 
   wait_for_elb_tasks(elb_tasks)
@@ -207,13 +210,15 @@ def main()
 
   json.each do |line|
     service, tmpl_array, instances, min_operational_instances, \
-    elb_name, region = parse_json_line(line)
+    elb_name, nsp, region = parse_json_line(line)
 
     old_server_array_name = get_server_array_name(args[:env], region, service,
                                                   old_queue_prefix)
 
-    elb_tasks.push(update_elb(args[:dryrun], right_client, elb_name,
+    if not elb_name.empty?
+      elb_tasks.push(update_elb(args[:dryrun], right_client, elb_name,
                               old_server_array_name, args[:env], 'remove'))
+    end
   end
 
   wait_for_elb_tasks(elb_tasks)

@@ -82,16 +82,14 @@ end
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
 #   - +region+ -> string for AWS regions, e.g., uswest2
-#   - +service+ -> comma separated string for packages to install.
-#                  The last package is the service to run on the node.
+#   - +service+ -> name of the service running on this array
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
 #   - string for server array name, e.g., prod-taskworker-0007a-uswest2
 #
 def get_server_array_name(env, region, service, queue_prefix)
-  packages = service.split(',')
-  return "#{env}-#{packages[-1]}-#{queue_prefix}-#{region}"
+  return "#{env}-#{service}-#{queue_prefix}-#{region}"
 end
 
 # Constructs puppet facts string for server array input.
@@ -100,21 +98,19 @@ end
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +env+ -> string for deployment environment, should be one of
 #      "prod", "staging", and "dev"
-#   - +service+ -> comma separated string for packages to install.
-#                  The last package is the service to run on the node.
+#   - +nsp+ -> space seperated list of NSPs to install.
 #   - +release_version+ -> string for the value returned by get_release_version
 #
 # * *Returns* :
 #   - string for puppet facts
 #
-def get_puppet_facts(region, service, env, release_version)
-  packages = service.split(',')
-  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp="
-  for package in packages
-      puppet_facts += "#{package}=#{release_version} "
+def get_puppet_facts(region, nsp, env, release_version)
+  packages = ''
+  for package in nsp.split()
+    packages = "#{packages} #{package}=#{release_version}"
   end
-  puppet_facts = puppet_facts.rstrip
-  puppet_facts += '"]'
+  packages = packages.lstrip.rstrip
+  puppet_facts = "array:[\"text:base_class=node_#{env}::nsp\",\"text:shard=#{region}\",\"text:nsp=#{packages}\"]"
   return puppet_facts
 end
 
@@ -137,6 +133,7 @@ end
 #                    server array
 #   - +release_version+ -> string for release version returned by
 #                          get_release_version()
+#   - +nsp+ -> space seperated list of NSPs to install, version will be appended
 #   - +region+ -> string for aws region
 #
 # * *Returns* :
@@ -144,15 +141,11 @@ end
 #
 def clone_server_array(dryrun, right_client, tmpl_server_array,
                        server_array_name, instances,
-                       release_version, service, env, region)
-
-  packages = service.split(',')
+                       release_version, service, env, nsp, region)
 
   # Clone a server array
   if dryrun
     $log.info("SUCCESS. Created server array #{server_array_name}")
-    $log.info(
-      "Will install #{packages[-1]}=#{release_version} for all instances.")
     $log.info("Will launch #{instances} instances.")
     return
   end
@@ -175,11 +168,10 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
 
   $log.info("SUCCESS. Created server array #{server_array_name}")
 
-  puppet_facts = get_puppet_facts(region, service, env, release_version)
-  #new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
-  #          'nd-puppet/config/facts' => puppet_facts})
+  puppet_facts = get_puppet_facts(region, nsp, env, release_version)
+  new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
+    'nd-puppet/config/facts' => puppet_facts})
   $log.info("Updated puppet input #{puppet_facts}.")
-  $log.info("Will install #{service}=#{release_version} for all instances.")
 
   # Launch new instances
   for i in 1..instances
@@ -281,7 +273,8 @@ def parse_arguments()
     :aws_access_key_id => nil,
     :aws_secret_access_key => nil,
     :instances => $DEFAULT_NUM_INSTANCES,
-    :dryrun => false
+    :dryrun => false,
+    :nsp => nil
   }
 
   parser = OptionParser.new do|opts|
@@ -308,6 +301,7 @@ def parse_arguments()
       options[:env] = env;
     end
 
+    # TODO FIXME XXX use the build URL instead of the CLI arg
     opts.on('-n', '--release_number NUM',
             'Release number. E.g., if release_0007a, then release_number=0007a.'
             ) do |release_number|
@@ -319,8 +313,13 @@ def parse_arguments()
     end
 
     opts.on('-s', '--service SERVICE',
-            'The service that runs in this server array.') do |service|
+            'Name of the service that runs in this server array.') do |service|
       options[:service] = service;
+    end
+
+    opts.on('-p', '--nsp NSP',
+            'Space seperated list of NSP packages to install.') do |nsp|
+      options[:nsp] = nsp;
     end
 
     opts.on('-t', '--refresh_token TOKEN',
@@ -367,6 +366,10 @@ def parse_arguments()
   end
 
   parser.parse!
+
+  if options[:nsp].nil?
+    abort('--nsp is required.')
+  end
 
   if options[:refresh_token].nil?
     abort('--refresh_token is required.')
@@ -473,7 +476,7 @@ def main()
 
   # Construct server array name
   server_array_name = get_server_array_name(args[:env], args[:region],
-                                            args[:service], args[:queue_prefix])
+                                            args[:service], queue_prefix)
 
   if args[:delete] and args[:taskworker]
     queues_empty = are_queues_empty(args[:aws_access_key_id],
@@ -514,12 +517,9 @@ def main()
 
   # Clone a new server array
   server_array = clone_server_array(args[:dryrun], right_client,
-                                    args[:tmpl_server_array],
-                                    server_array_name,
-                                    args[:instances],
-                                    release_version,
-                                    args[:service],
-                                    args[:env],
+                                    args[:tmpl_server_array], server_array_name,
+                                    args[:instances], release_version,
+                                    args[:service], args[:env], args[:nsp],
                                     args[:region])
 
   while not check_for_running_instances(server_array, 1)

@@ -1,0 +1,64 @@
+{
+  "api": {
+    "tmpl_server_array": "233684003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "elb_name": "",
+    "nsp": "nextdoor.com api",
+    "region": "uswest2"
+  },
+
+  "fe": {
+    "tmpl_server_array": "233695003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "elb_name": "",
+    "nsp": "nextdoor.com frontend",
+    "region": "uswest2"
+  },
+
+  "melissadata": {
+    "tmpl_server_array": "233696003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "elb_name": "",
+    "nsp": "nextdoor.com nextdoor-melissadata-service",
+    "region": "uswest2"
+  },
+
+  "photos": {
+    "tmpl_server_array": "233697003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "elb_name": "",
+    "nsp": "nextdoor.com frontend",
+    "region": "uswest2"
+  },
+
+  "taskworker": {
+    "tmpl_server_array": "233698003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "elb_name": "",
+    "nsp": "nextdoor.com taskworker",
+    "region": "uswest2"
+  },
+
+  "tools": {
+    "tmpl_server_array": "233700003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "elb_name": "",
+    "nsp": "nextdoor.com tools",
+    "region": "uswest2"
+  },
+
+  "ts": {
+    "tmpl_server_array": "233701003",
+    "instances": 1,
+    "min_operational_instances": 1,
+    "elb_name": "",
+    "nsp": "nextdoor.com tileserver",
+    "region": "uswest2"
+  }
+}

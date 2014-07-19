@@ -50,9 +50,10 @@ describe 'get_server_array_name' do
 end
 
 describe 'get_puppet_facts' do
-  it 'should create porper puppet array' do
+  it 'should create proper puppet array' do
     facts = get_puppet_facts(
-     'uswest1', 'nextdoor.com,taskworker', 'prod', 'abcd')
+     'uswest1', 'nextdoor.com taskworker', 'prod', 'abcd')
+
     expect(facts).to eq(
         'array:["text:base_class=node_prod::nsp","text:shard=uswest1",'\
         '"text:nsp=nextdoor.com=abcd taskworker=abcd"]'
