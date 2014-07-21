@@ -115,8 +115,8 @@ end
 
 # Split the given line and return the individual values
 def parse_json_line(line)
-  return line[0], line[1]['tmpl_server_array'], line[1]['instances'], \
-  line[1]['min_operational_instances'], line[1]['elb_name'], line[1]['region']
+  return line[0], line[1]['tmpl_server_array'], \
+  line[1]['elb_name'], line[1]['region']
 end
 
 # Main function.
@@ -139,13 +139,11 @@ def main()
   #### Create new server arrays
 
   # Keep a list of newly created server arrays so we can check if they have
-  # running instances with their min_operational_instances count.  Each
-  # element is another list/tuple of the array and it's
-  # min_operational_instances count
+  # running instances. Each element is another list/tuple of the array
   server_arrays = []
 
   json.each do |line|
-    service, tmpl_array, instances, min_operational_instances, \
+    service, tmpl_array, \
     elb_name, region = parse_json_line(line)
 
     $log.info("Booting new instances for #{elb_name}...")
@@ -154,12 +152,11 @@ def main()
                                               queue_prefix)
 
     if not args[:dryrun]
-      server_arrays.push(
-                         [clone_server_array(args[:dryrun], right_client,
-                                            tmpl_array, server_array_name,
-                                            instances, release_version,
-                                            service, args[:env], region),
-                          min_operational_instances])
+      server_arrays.push([
+        clone_server_array(args[:dryrun], right_client,
+                          tmpl_array, server_array_name,
+                          release_version,
+                          service, args[:env], region),])
     end
   end
 
@@ -167,8 +164,7 @@ def main()
     operational_array_count = 0
     for server_array_tuple in server_arrays
       # checks if the server array has the min number of operational instances
-      if check_for_running_instances(server_array_tuple[0],
-                                     server_array_tuple[1])
+      if min_instances_operational?(server_array_tuple[0])
         operational_array_count += 1
       end
     end
@@ -186,7 +182,7 @@ def main()
   elb_tasks = []
 
   json.each do |line|
-    service, tmpl_array, instances, min_operational_instances, \
+    service, tmpl_array, \
     elb_name, region = parse_json_line(line)
 
     server_array_name = get_server_array_name(args[:env], region, service,
@@ -206,7 +202,7 @@ def main()
   elb_tasks = []
 
   json.each do |line|
-    service, tmpl_array, instances, min_operational_instances, \
+    service, tmpl_array, \
     elb_name, region = parse_json_line(line)
 
     old_server_array_name = get_server_array_name(args[:env], region, service,
