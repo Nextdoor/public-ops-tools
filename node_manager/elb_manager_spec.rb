@@ -9,6 +9,25 @@ RSpec.configure do |config|
   end
 end
 
+describe 'parse_arguments' do
+    it "should require an action" do
+      expect {
+          parse_arguments()
+      }.to raise_error(/must specify an action/)
+    end
+
+    it "should work with all the needed arguments passed" do
+        ARGV = ['--add',
+                '--elb', 'unit-test',
+                '--server_array','unit-test-array',
+                '--refresh_token', '123unit']
+
+        expect {
+            parse_arguments()
+        }.to_not raise_error
+
+    end
+end
 describe 'update_elb' do
 
     before :each do

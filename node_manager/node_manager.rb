@@ -265,7 +265,7 @@ def are_queues_empty(aws_access_key_id, aws_secret_access_key, env, region,
 end
 
 # Parse command line arguments.
-def parse_arguments()
+def node_parse_arguments()
   options = {
     :api_url => $DEFAULT_API_URL,
     :api_version => $DEFAULT_API_VERSION,
@@ -458,7 +458,7 @@ end
 #
 def main()
   # Parse command line arguments
-  args = parse_arguments()
+  args = node_parse_arguments()
 
   if args[:dryrun]
     $log.info('Dryrun mode. Should be safe to run!')

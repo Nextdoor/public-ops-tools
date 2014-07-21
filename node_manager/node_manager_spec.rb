@@ -9,6 +9,25 @@ RSpec.configure do |config|
   end
 end
 
+describe 'parse_arguments' do
+    it "should require an token" do
+      expect {
+          node_parse_arguments()
+      }.to raise_error(/refresh_token is required/)
+    end
+
+    it "should work with all the needed arguments passed" do
+        ARGV = ['--refresh_token', '123unit',
+                '--tmpl_server_array', '123array',
+                '--build_url', 'host/url']
+
+        expect {
+            node_parse_arguments()
+        }.to_not raise_error
+
+    end
+end
+
 describe 'get_release_version' do
   it "parse the version" do
     expect(get_release_version(
