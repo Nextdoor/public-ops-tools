@@ -12,7 +12,7 @@ end
 describe 'parse_arguments' do
     it "should require an action" do
       expect {
-          parse_arguments()
+          elb_parse_arguments()
       }.to raise_error(/must specify an action/)
     end
 
@@ -23,7 +23,7 @@ describe 'parse_arguments' do
                 '--refresh_token', '123unit']
 
         expect {
-            parse_arguments()
+            elb_parse_arguments()
         }.to_not raise_error
 
     end

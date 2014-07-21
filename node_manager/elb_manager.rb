@@ -19,7 +19,7 @@ require './node_manager'
 $log = get_logger()
 
 # Parse command line arguments.  Some defaults come from node_manager.rb
-def parse_arguments()
+def elb_parse_arguments()
   options = {
     :add => false,
     :remove => false,
@@ -201,7 +201,7 @@ end
 # Main function.
 #
 def main()
-  args = parse_arguments()
+  args = elb_parse_arguments()
   right_client = get_right_client(args[:oauth2_api_url],
                                   args[:refresh_token],
                                   args[:api_version],
