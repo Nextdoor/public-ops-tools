@@ -113,12 +113,6 @@ def parse_json_file(fname)
   return JSON.parse(json)
 end
 
-# Split the given line and return the individual values
-def parse_json_line(line)
-  return line[0], line[1]['tmpl_server_array'], \
-  line[1]['elb_name'], line[1]['region']
-end
-
 # Main function.
 #
 def main()
@@ -134,7 +128,7 @@ def main()
   old_release_version = get_release_version(args[:old_build_url])
   old_queue_prefix = get_queue_prefix(old_release_version)
 
-  json = parse_json_file(args[:json])
+  config = parse_json_file(args[:json])
 
   #### Create new server arrays
 
@@ -142,21 +136,21 @@ def main()
   # running instances. Each element is another list/tuple of the array
   server_arrays = []
 
-  json.each do |line|
-    service, tmpl_array, \
-    elb_name, region = parse_json_line(line)
+  config.each do |service, params|
 
-    $log.info("Booting new instances for #{service}...")
+    $log.info('Booting new instances for %s...' % service)
 
-    server_array_name = get_server_array_name(args[:env], region, service,
-                                              queue_prefix)
+    server_array_name = get_server_array_name(
+        args[:env], params['region'], service, queue_prefix)
 
     if not args[:dryrun]
-      server_arrays.push([
-        clone_server_array(args[:dryrun], right_client,
-                          tmpl_array, server_array_name,
-                          release_version,
-                          service, args[:env], region),])
+     new_array = clone_server_array(
+        args[:dryrun], right_client,
+        params['tmpl_server_array'], server_array_name,
+        release_version,
+        service, args[:env], params['region'])
+
+     server_arrays.push([new_array,])
     end
   end
 
@@ -174,6 +168,7 @@ def main()
     $log.info("Waiting for instances to boot...")
     sleep 60
   end
+  $log.info('All needed instances have booted.')
 
 
   #### Add the new server arrays to ELBs
@@ -181,21 +176,22 @@ def main()
   # Keep a list of update_elb tasks so we can check their status
   elb_tasks = []
 
-  json.each do |line|
-    service, tmpl_array, \
-    elb_name, region = parse_json_line(line)
+  config.each do |service, params|
+    $log.info('Creating an "add" task for service "%s"' % service)
 
-    server_array_name = get_server_array_name(args[:env], region, service,
-                                              queue_prefix)
+    server_array_name = get_server_array_name(
+        args[:env], params['region'], service, queue_prefix)
 
     if not elb_name.empty?
-      elb_tasks.push(
-                     update_elb(args[:dryrun], right_client, elb_name,
-                                server_array_name, args[:env], 'add'))
+        task = update_elb(args[:dryrun], right_client, params['elb_name'],
+                      server_array_name, args[:env], 'add')
+        elb_tasks.push(task)
     end
   end
 
+  $log.info('Waiting for ELB "add" tasks...')
   wait_for_elb_tasks(elb_tasks)
+  $log.info('ELB "add" tasks completed!')
 
 
   #### Remove the old instances from the ELB
@@ -203,19 +199,20 @@ def main()
   # Reset the list of tasks
   elb_tasks = []
 
-  json.each do |line|
-    service, tmpl_array, \
-    elb_name, region = parse_json_line(line)
+  config.each do |service, params|
+    $log.info('Creating an "remove" task for service "%s"' % service)
 
-    old_server_array_name = get_server_array_name(args[:env], region, service,
-                                                  old_queue_prefix)
+    old_server_array_name = get_server_array_name(
+        args[:env], params['region'], service, old_queue_prefix)
 
     if not elb_name.empty?
-      elb_tasks.push(update_elb(args[:dryrun], right_client, elb_name,
-                              old_server_array_name, args[:env], 'remove'))
+        task = update_elb(args[:dryrun], right_client, params['elb_name'],
+                          old_server_array_name, args[:env], 'remove')
+        elb_tasks.push(task)
     end
   end
 
+  $log.info('Waiting for ELB "remove" tasks...')
   wait_for_elb_tasks(elb_tasks)
 
   $log.info("Done!")
