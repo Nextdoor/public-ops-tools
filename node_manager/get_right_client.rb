@@ -9,6 +9,7 @@
 #   - string for OAuth2 access token of RightScale
 #
 
+require 'rubygems'
 require 'rest-client'
 require 'right_api_client'
 

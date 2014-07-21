@@ -133,8 +133,6 @@ end
 #   - +tmpl_server_array+ -> integer for the template server array id
 #   - +server_array_name+ -> string for server_array_name returned from
 #                            get_server_array_name()
-#   - +instances+ -> integer for number of instances to create inside this
-#                    server array
 #   - +release_version+ -> string for release version returned by
 #                          get_release_version()
 #   - +region+ -> string for aws region
@@ -143,7 +141,7 @@ end
 #   - a RightScale Resource instance representing the newly created server array
 #
 def clone_server_array(dryrun, right_client, tmpl_server_array,
-                       server_array_name, instances,
+                       server_array_name,
                        release_version, service, env, region)
 
   packages = service.split(',')
@@ -153,12 +151,13 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
     $log.info("SUCCESS. Created server array #{server_array_name}")
     $log.info(
       "Will install #{packages[-1]}=#{release_version} for all instances.")
-    $log.info("Will launch #{instances} instances.")
     return
   end
 
   new_server_array = right_client.server_arrays(
                        :id => tmpl_server_array).show.clone
+
+  instances = new_server_array.elasticity_params['bounds']['min_count'].to_i
 
   # Rename the newly created server array
   params = { :server_array => {
@@ -196,21 +195,21 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
   return new_server_array
 end
 
-# Are all the instances running?
+# Is the quorum of instances operational?
 #
 # Count the sum of all operational instances in this server array and check if
 # there is enough of them to consider this array operational.
 #
 # * *Args*:
 #   - +server_array+ -> array object
-#   - +min_operational_instances+ -> number of expected instances to be considered 'operational'
 #
 # * *Returns*:
 #   - +boolean+ -> 
 #
-def check_for_running_instances(server_array, min_operational_instances)
+def min_instances_operational?(server_array)
   # Wait min_instances to become operational.
   operational_instances = 0
+  min_instances = server_array.elasticity_params['bounds']['min'].to_i
 
   for instance in server_array.current_instances.index
     if instance.state == 'operational'
@@ -218,7 +217,7 @@ def check_for_running_instances(server_array, min_operational_instances)
     end
   end
 
-  if operational_instances >= min_operational_instances
+  if operational_instances >= min_instances
     return true
   else
     return false
@@ -516,14 +515,15 @@ def main()
   server_array = clone_server_array(args[:dryrun], right_client,
                                     args[:tmpl_server_array],
                                     server_array_name,
-                                    args[:instances],
                                     release_version,
                                     args[:service],
                                     args[:env],
                                     args[:region])
 
-  while not check_for_running_instances(server_array, 1)
-    $log.info("Waiting for at least one instance to boot...")
+  instances = server_array.elasticity_params['bounds']['min_count'].to_i
+
+  while not min_instances_operational?(server_array)
+    $log.info("Waiting for array's minimum instance count to be operational...")
     sleep 60
   end
 
