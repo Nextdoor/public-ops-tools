@@ -9,11 +9,11 @@
 
 require 'optparse'
 
-require './defaults'
-require './find_server_array'
-require './get_logger'
-require './get_right_client'
-require './node_manager'
+require File.join(File.expand_path(File.dirname(__FILE__)), 'defaults.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'find_server_array')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'get_logger')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'get_right_client')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'node_manager')
 
 # Global logger
 $log = get_logger()

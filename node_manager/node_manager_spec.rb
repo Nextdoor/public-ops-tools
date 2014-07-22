@@ -86,7 +86,7 @@ describe 'get_puppet_facts' do
     facts = get_puppet_facts([FakeInputs], 'uswest1', 'prod', 'abcd')
 
     expect(facts).to eq(
-        'array:["text:nsp=nextdoor.com=abcd taskworker=abcd, app_group=us1"]')
+        'array:["text:nsp=nextdoor.com=abcd taskworker=abcd","text:app_group=us1"]')
   end
 end
 

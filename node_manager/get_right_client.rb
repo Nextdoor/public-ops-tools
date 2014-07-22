@@ -13,7 +13,7 @@ require 'rubygems'
 require 'rest-client'
 require 'right_api_client'
 
-require './defaults'
+require File.join(File.expand_path(File.dirname(__FILE__)), 'defaults.rb')
 
 def get_access_token(right_client, refresh_token, api_version)
   post_data = Hash.new()

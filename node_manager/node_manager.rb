@@ -16,13 +16,16 @@
 
 require 'rubygems'
 require 'optparse'
-require 'pp'
+require 'pp'  # unused?
 require 'uri'
 
-require './defaults'
-require './find_server_array'
-require './get_logger'
-require './get_right_client'
+require File.join(File.expand_path(File.dirname(__FILE__)), 'defaults.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)),
+                  'find_server_array.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'get_logger.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)),
+                  'get_right_client.rb')
+
 
 # Global logger
 $log = get_logger()
@@ -125,9 +128,12 @@ def get_puppet_facts(old_inputs, region, env, release_version)
     new_facts.push(fact)
   end
 
-  puppet_facts = "array:[\"text:"
-  puppet_facts = puppet_facts + new_facts.join(', ')
-  puppet_facts = puppet_facts + "\"]"
+  puppet_facts = "array:["
+  for fact in new_facts
+    puppet_facts += "\"text:#{fact}\","
+  end
+  puppet_facts = puppet_facts.chomp(',')
+  puppet_facts += "]"
   return puppet_facts
 end
 

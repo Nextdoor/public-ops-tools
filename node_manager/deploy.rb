@@ -10,11 +10,12 @@
 require 'rubygems'
 require 'json'
 
-require './defaults'
-require './get_logger'
-require './get_right_client'
-require './elb_manager'
-require './node_manager'
+require File.join(File.expand_path(File.dirname(__FILE__)), 'defaults.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'get_logger.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)),
+                  'get_right_client.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'elb_manager.rb')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'node_manager.rb')
 
 # Global logger
 $log = get_logger()
