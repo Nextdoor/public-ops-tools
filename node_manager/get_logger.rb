@@ -1,7 +1,8 @@
 require 'logger'
 
 def get_logger
-  log = Logger.new(STDOUT)
+  $stdout.sync = true
+  log = Logger.new($stdout)
   log.level = Logger::INFO
   return log
 end
