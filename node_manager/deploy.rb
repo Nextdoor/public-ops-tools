@@ -56,8 +56,8 @@ def parse_arguments()
       $log.info('Dryrun is on.  Not making any changes')
     end
 
-    opts.on('-j', '--json JSON',
-            'JSON file containing server array and ELB IDs.') do |json|
+    opts.on('-j', '--json (FILE|-)',
+            'File or STDIN of JSON - containing server array and ELB IDs.') do |json|
       options[:json] = json
     end
 
@@ -109,8 +109,12 @@ end
 
 # Parse provided JSON file and return output
 def parse_json_file(fname)
-  file = open(fname)
-  json = file.read
+  if fname == '-'  # Expect stdin
+      json = ARGF.read
+  else
+      file = open(fname)
+      json = file.read
+  end
   return JSON.parse(json)
 end
 
