@@ -1,7 +1,8 @@
 require 'rubygems'
 require 'rspec/autorun'
 require 'rspec/core'
-require './elb_manager'
+
+require File.join(File.expand_path(File.dirname(__FILE__)), 'elb_manager.rb')
 
 RSpec.configure do |config|
   config.mock_with :rspec do |c|
