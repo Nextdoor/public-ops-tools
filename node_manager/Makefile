@@ -1,7 +1,7 @@
 all: coverage
 
 coverage:
-	rcov -T --exclude=.*lib.*, *_spec.rb
+	rcov -T --exclude=.*lib.*,.*_spec.rb *_spec.rb
 	@echo "Created directory 'coverage'"
 
 clean:

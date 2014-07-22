@@ -113,3 +113,34 @@ describe 'get_access_token' do
     expect(token).to eq('unit-test-value')
   end
 end
+
+describe 'clone_server_array' do
+
+    it 'should work' do
+        rc = double('right_client')
+        sa = double('server_array')
+        inp = double('inputs')
+        allow(rc).to receive(:server_arrays).and_return(sa)
+        allow(sa).to receive(:show).and_return(sa)
+        allow(sa).to receive(:clone).and_return(sa)
+        allow(sa).to receive(:next_instance).and_return(sa)
+        allow(sa).to receive(:inputs).and_return(inp)
+            allow(inp).to receive(:multi_update)
+            allow(inp).to receive(:index)
+        allow(sa).to receive(:elasticity_params).and_return(
+            {'bounds'=> {'min_count' => 1}})
+        allow(sa).to receive(:update)
+        allow(sa).to receive(:launch)
+        allow(sa).to receive(:index)
+
+        stub(:get_puppet_facts) { {} }
+        stub(:sleep)
+        stub(:find_server_array) { sa }
+
+        sa.should_receive(:launch).once
+        clone_server_array(false, rc, '12345678', 'unit-test', 'release~123', 'frontend', 'staging', 'uswest0')
+        $log.info('Checking that %s launched' % sa)
+
+        expect(sa).to have_received(:launch).once
+    end
+end
