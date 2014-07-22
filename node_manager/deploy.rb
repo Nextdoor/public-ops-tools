@@ -124,10 +124,10 @@ def main()
                                   args[:api_url])
 
   release_version = get_release_version(args[:build_url])
-  queue_prefix = get_queue_prefix(release_version)
+  short_version = get_short_version(release_version)
 
   old_release_version = get_release_version(args[:old_build_url])
-  old_queue_prefix = get_queue_prefix(old_release_version)
+  old_short_version = get_short_version(old_release_version)
 
   config = parse_json_file(args[:json])
 
@@ -142,7 +142,7 @@ def main()
     $log.info('Booting new instances for %s...' % service)
 
     server_array_name = get_server_array_name(
-        args[:env], params['region'], service, queue_prefix)
+        args[:env], params['region'], service, short_version)
 
     if not args[:dryrun]
      new_array = clone_server_array(
@@ -181,7 +181,7 @@ def main()
     $log.info('Creating an "add" task for service "%s"' % service)
 
     server_array_name = get_server_array_name(
-        args[:env], params['region'], service, queue_prefix)
+        args[:env], params['region'], service, short_version)
 
     if not params.has_key? 'elb_name'
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
@@ -204,7 +204,7 @@ def main()
     $log.info('Creating an "remove" task for service "%s"' % service)
 
     old_server_array_name = get_server_array_name(
-        args[:env], params['region'], service, old_queue_prefix)
+        args[:env], params['region'], service, old_short_version)
 
     if not params.has_key? 'elb_name'
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
