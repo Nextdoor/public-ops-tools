@@ -150,15 +150,15 @@ def main()
         release_version,
         service, args[:env], params['region'])
 
-     server_arrays.push([new_array,])
+     server_arrays.push(new_array)
     end
   end
 
   while true
     operational_array_count = 0
-    for server_array_tuple in server_arrays
+    for server_array in server_arrays
       # checks if the server array has the min number of operational instances
-      if min_instances_operational?(server_array_tuple[0])
+      if min_instances_operational?(server_array)
         operational_array_count += 1
       end
     end
@@ -168,7 +168,7 @@ def main()
     $log.info("Waiting for instances to boot...")
     sleep 60
   end
-  $log.info('All needed instances have booted.')
+  $log.info('All needed arrays have booted.')
 
 
   #### Add the new server arrays to ELBs
@@ -182,7 +182,7 @@ def main()
     server_array_name = get_server_array_name(
         args[:env], params['region'], service, queue_prefix)
 
-    if not elb_name.empty?
+    if not params.has_key? 'elb_name'
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
                       server_array_name, args[:env], 'add')
         elb_tasks.push(task)
@@ -205,7 +205,7 @@ def main()
     old_server_array_name = get_server_array_name(
         args[:env], params['region'], service, old_queue_prefix)
 
-    if not elb_name.empty?
+    if not params.has_key? 'elb_name'
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
                           old_server_array_name, args[:env], 'remove')
         elb_tasks.push(task)
