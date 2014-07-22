@@ -478,7 +478,7 @@ end
 
 # Main function.
 #
-def main()
+def node_main()
   # Parse command line arguments
   args = node_parse_arguments()
 
@@ -560,5 +560,5 @@ end
 # Program entry.
 #
 if __FILE__ == $0
-  main()
+  node_main()
 end

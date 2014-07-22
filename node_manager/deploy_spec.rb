@@ -8,3 +8,29 @@ RSpec.configure do |config|
     c.syntax = [:expect]
   end
 end
+
+describe 'parse_arguments' do
+
+    it 'should work' do
+        ARGV = ['--json', 'test.json',
+                '--refresh_token', 'unit-test',
+                '--build_url', 'unit/test.com',
+                '--old_build_url', 'old/unit/test.com']
+        parse_arguments()
+    end
+
+end
+describe 'main()' do
+
+    it 'should no-op with empty config' do
+
+        stub(:parse_arguments) { {} }
+        stub(:get_right_client)
+        stub(:get_release_version) { 'unit-test-release-version' }
+        stub(:get_short_version) { 'utrv' }
+
+        stub(:parse_json_file) { [] }  # Empty config!
+
+        expect { main() }.not_to raise_error
+    end
+end

@@ -200,7 +200,7 @@ end
 
 # Main function.
 #
-def main()
+def elb_main()
   args = elb_parse_arguments()
   right_client = get_right_client(args[:oauth2_api_url],
                                   args[:refresh_token],
@@ -232,5 +232,5 @@ end
 # Program entry.
 #
 if __FILE__ == $0
-  main()
+  elb_main()
 end
