@@ -40,31 +40,31 @@ describe 'get_release_version' do
   end
 end
 
-describe 'get_queue_prefix' do
+describe 'get_short_version' do
   it 'parse prefix' do
     expect(
-        get_queue_prefix('20140409-035643~release-0007a.bb93bbc')
+        get_short_version('20140409-035643~release-0007a.bb93bbc')
     ).to eq('0007a-bb93bbc')
 
     expect(
-        get_queue_prefix('20140409-035643~release.bb93bbc')
+        get_short_version('20140409-035643~release.bb93bbc')
     ).to eq('release-bb93bbc')
 
     expect(
-        get_queue_prefix('20140409-035643~master.bb93bbc')
+        get_short_version('20140409-035643~master.bb93bbc')
     ).to eq('master-bb93bbc')
   end
 end
 
 describe 'get_server_array_name' do
   it 'should compile server array names' do
-    queue_prefix = get_server_array_name(
+    sa_name = get_server_array_name(
         'staging', 'uswest1', 'fe', '0008a')
-    expect(queue_prefix).to eq('staging-fe-0008a-uswest1')
+    expect(sa_name).to eq('staging-fe-0008a-uswest1')
 
-    queue_prefix = get_server_array_name(
+    sa_name = get_server_array_name(
         'staging', 'uswest1', 'taskworker', '0008a')
-    expect(queue_prefix).to eq('staging-taskworker-0008a-uswest1')
+    expect(sa_name).to eq('staging-taskworker-0008a-uswest1')
   end
 end
 

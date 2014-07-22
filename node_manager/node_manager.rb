@@ -50,19 +50,18 @@ A good release version looks like this:
   end
 end
 
-# Returns queue prefix.
+# Returns short version of the release version.
 #
-# If it's a release branch, then returns the release number;
-# otherwise, returns the commit sha.
+# This is mainly used when cloning a taskworker array.
 #
 # * *Args*    :
-#   - +release_version+ -> string for release version, e.g.,
-#      20140409-035643~release-0007a.bb93bbc
+#   - +release_version+ -> string for release version
 #
-# * *Returns* :
-#      String for queue prefix
+# * *Return Examples* :
+#   - for DDD-TTT~branch-VVV.SHA : *VVV-SHA*
+#   - for DDD-TTT~branch-SHA : *branch-SHA*
 #
-def get_queue_prefix(release_version)
+def get_short_version(release_version)
   parts = release_version.split('~')[1].split('.')
   sha = parts[1]
   release_parts = parts[0].split('-')
@@ -83,13 +82,13 @@ end
 #      "prod", "staging", and "dev"
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +service+ -> name of the service running on this array
-#   - +release_version+ -> string for the value returned by get_release_version
+#   - +version+ -> string used for versioning server arrays.
 #
 # * *Returns* :
 #   - string for server array name, e.g., prod-taskworker-0007a-uswest2
 #
-def get_server_array_name(env, region, service, queue_prefix)
-  return "#{env}-#{service}-#{queue_prefix}-#{region}"
+def get_server_array_name(env, region, service, version)
+  return "#{env}-#{service}-#{version}-#{region}"
 end
 
 # Constructs puppet facts string for server array input.
@@ -106,17 +105,19 @@ end
 #   - string for puppet facts
 #
 def get_puppet_facts(old_inputs, region, env, release_version)
-  for input in old_inputs
-    if input.name == 'nd-puppet/config/facts'
-      old_facts = input.value
-    end
+  fact_path = 'nd-puppet/config/facts'
+
+  old_facts = old_inputs.find {|i| i.name == fact_path}.value
+
+  old_facts = old_facts.split(':')[1]
+  if not old_facts
+      abort('Could not find any facts for "%s"' % fact_path)
   end
 
   # Example of old_facts before a split:
   #   array:nsp=nextdoor.com api,app_group=staging-us1
   # We also support replacing 'installed' with a version #, so this is valid
   #   array:nsp=nextdoor.com=installed api=installed,app_group=staging-us1
-  old_facts = old_facts.split(':')[1]
   new_facts = []
   for fact in old_facts.split(',')
     if fact.start_with? 'nsp='
@@ -243,15 +244,17 @@ end
 # * *Args*    :
 #   - +aws_access_key_id+ -> string for aws_access_key
 #   - +aws_secret_access_key+ -> string for aws_secret_access_key
+#   - +env+ -> string for prod/staging
 #   - +region+ -> string for aws region for sqs
+#   - +queue_name+ -> string with release version
 #
 # * *Returns* :
 #   - true if all queues are empty; otherwise, false
 #
-def are_queues_empty(aws_access_key_id, aws_secret_access_key, env, region,
-                     queue_prefix)
+def queues_empty?(aws_access_key_id, aws_secret_access_key, env, region,
+                     queue_name)
 
-  prefix = env + '-' + queue_prefix
+  prefix = env + '-' + queue_name
 
   region_to_server_map = {
     'uswest1' => 'sqs.us-west-1.amazonaws.com',
@@ -477,24 +480,25 @@ def main()
     $log.info('Dryrun mode. Should be safe to run!')
   end
 
-  queue_prefix = args[:release_number]
+  short_version = args[:release_number]
   if not args[:delete]
     # Get release version from build url
     release_version = get_release_version(args[:build_url])
-    queue_prefix = get_queue_prefix(release_version)
+    short_version = get_short_version(release_version)
   end
 
   # Construct server array name
   server_array_name = get_server_array_name(args[:env], args[:region],
-                                            args[:service], queue_prefix)
+                                            args[:service], short_version)
 
   if args[:delete] and args[:taskworker]
-    queues_empty = are_queues_empty(args[:aws_access_key_id],
+    ok_to_delete = queues_empty?(args[:aws_access_key_id],
                                     args[:aws_secret_access_key],
-                                    args[:env], args[:region], queue_prefix)
+                                    args[:env], args[:region], short_version)
 
-    if not queues_empty
-      abort("Cannot destroy #{server_array_name} unless all queues with prefix \"#{queue_prefix}\" are empty.")
+    if not ok_to_delete
+      abort("Cannot delete #{server_array_name} unless all queues with prefix " +
+            "\"#{short_version}\" are empty.")
     end
   end
 
