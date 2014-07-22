@@ -164,7 +164,7 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
   end
 
   new_server_array = right_client.server_arrays(
-                       :id => tmpl_server_array).show.clone
+                       :id => tmpl_server_array).show.clone.show
 
   instances = new_server_array.elasticity_params['bounds']['min_count'].to_i
 
@@ -174,7 +174,7 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
       :state => 'enabled'
   }}
 
-  new_server_array.show.update(params)
+  new_server_array.update(params)
 
   # Repeated calls with the same server_array_name can lead to failures
   # since RightScale uses the old name with 'v1' appended.  This sleeping
@@ -184,9 +184,9 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
   $log.info("SUCCESS. Created server array #{server_array_name}")
 
   puppet_facts = get_puppet_facts(
-                   new_server_array.show.next_instance.show.inputs.index,
+                   new_server_array.next_instance.show.inputs.index,
                    region, env, release_version)
-  new_server_array.show.next_instance.show.inputs.multi_update('inputs' => {
+  new_server_array.next_instance.show.inputs.multi_update('inputs' => {
     'nd-puppet/config/facts' => puppet_facts})
   $log.info("Updated puppet input #{puppet_facts}.")
 
@@ -222,7 +222,7 @@ end
 def min_instances_operational?(server_array)
   # Wait min_instances to become operational.
   operational_instances = 0
-  min_instances = server_array.elasticity_params['bounds']['min'].to_i
+  min_instances = server_array.elasticity_params['bounds']['min_count'].to_i
 
   for instance in server_array.current_instances.index
     if instance.state == 'operational'

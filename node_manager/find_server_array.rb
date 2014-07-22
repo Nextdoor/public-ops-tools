@@ -10,6 +10,8 @@
 #
 def find_server_array(right_client, server_array_name)
   $log.debug('Using "%s" to find "%s"' % [right_client, server_array_name])
+
+  # FIXME this should be an exact match, not a filter
   server_arrays = right_client.server_arrays(
                     :filter => ["name=="+server_array_name]).index
   if server_arrays.nil? or server_arrays.size() == 0
@@ -19,7 +21,7 @@ def find_server_array(right_client, server_array_name)
     $log.info("FOUND. #{server_array_name} exists.")
     return server_arrays[0]
   end
-  return nil
+  $log.info("NOT FOUND. #{server_array_name} is not found.")
 end
 
 # Find server arrays with the given name
