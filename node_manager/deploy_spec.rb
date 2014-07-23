@@ -15,7 +15,7 @@ describe 'parse_arguments' do
         ARGV = ['--json', 'test.json',
                 '--refresh_token', 'unit-test',
                 '--build_url', 'unit/test.com',
-                '--old_build_url', 'old/unit/test.com']
+                '--old_build_version', '0001a-000000']
         parse_arguments()
     end
 

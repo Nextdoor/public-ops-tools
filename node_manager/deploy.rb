@@ -31,7 +31,7 @@ def parse_arguments()
     :dryrun => nil,
     :env => $DEFAULT_ENV,
     :build_url => nil,
-    :old_build_url => nil,
+    :old_build_version => nil,
   }
 
   parser = OptionParser.new do|opts|
@@ -46,9 +46,9 @@ def parse_arguments()
       options[:build_url] = build_url;
     end
 
-    opts.on('-o', '--old_build_url OLD_BUILD_URL',
-            'Jenkins Build URL for the current install.') do |old_build_url|
-      options[:old_build_url] = old_build_url;
+    opts.on('-o', '--old_build_version OLD_BUILD_VERSION',
+            'Current install version string.') do |old_build_version|
+      options[:old_build_version] = old_build_version;
     end
 
     opts.on('-d', '--dryrun', 'Dryrun. Do not make changes.') do
@@ -100,10 +100,6 @@ def parse_arguments()
     abort('--build_url is required.')
   end
 
-  if options[:old_build_url].nil?
-    abort('--old_build_url is required.')
-  end
-
   return options
 end
 
@@ -129,9 +125,6 @@ def main()
 
   release_version = get_release_version(args[:build_url])
   short_version = get_short_version(release_version)
-
-  old_release_version = get_release_version(args[:old_build_url])
-  old_short_version = get_short_version(old_release_version)
 
   config = parse_json_file(args[:json])
 
@@ -201,26 +194,32 @@ def main()
 
   #### Remove the old instances from the ELB
 
-  # Reset the list of tasks
-  elb_tasks = []
+  if args[:old_build_version] == ''
+    # We can't easily check Multi-Run Executables status
+    # So we wait 5 minutes before removing the old instances from the ELBs
+    sleep 360
 
-  config.each do |service, params|
-    $log.info('Creating an "remove" task for service "%s"' % service)
+    # Init the list of tasks
+    elb_tasks = []
 
-    old_server_array_name = get_server_array_name(
-        args[:env], params['region'], service, old_short_version)
+    config.each do |service, params|
+      $log.info('Creating an "remove" task for service "%s"' % service)
 
-    if params.has_key? 'elb_name'
+      old_server_array_name = get_server_array_name(
+        args[:env], params['region'], service, args[:old_build_version])
+
+      if params.has_key? 'elb_name'
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
                           old_server_array_name, args[:env], 'remove')
         elb_tasks.push(task)
+      end
     end
+
+    $log.info('Waiting for ELB "remove" tasks...')
+    wait_for_elb_tasks(elb_tasks)
+
+    $log.info("Done!")
   end
-
-  $log.info('Waiting for ELB "remove" tasks...')
-  wait_for_elb_tasks(elb_tasks)
-
-  $log.info("Done!")
 end
 
 #
