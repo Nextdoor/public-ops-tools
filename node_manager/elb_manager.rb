@@ -198,6 +198,13 @@ def check_elb_task(task)
   end
 end
 
+def check_rs_timeout(iterations)
+  if iterations >= $RS_TIMEOUT
+    abort('Timeout waiting on RightScale task! (%s seconds)' % $RS_TIMEOUT)
+  end
+  sleep 1
+end
+
 # Main function.
 #
 def elb_main()

@@ -149,7 +149,7 @@ def main()
         args[:env], params['region'], service, short_version)
 
     if not args[:dryrun]
-     new_array = clone_server_array(
+      new_array = clone_server_array(
         args[:dryrun], right_client,
         params['tmpl_server_array'], server_array_name,
         release_version,
@@ -187,7 +187,7 @@ def main()
     server_array_name = get_server_array_name(
         args[:env], params['region'], service, short_version)
 
-    if not params.has_key? 'elb_name'
+    if params.has_key? 'elb_name'
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
                       server_array_name, args[:env], 'add')
         elb_tasks.push(task)
@@ -210,7 +210,7 @@ def main()
     old_server_array_name = get_server_array_name(
         args[:env], params['region'], service, old_short_version)
 
-    if not params.has_key? 'elb_name'
+    if params.has_key? 'elb_name'
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
                           old_server_array_name, args[:env], 'remove')
         elb_tasks.push(task)
