@@ -140,7 +140,21 @@ describe 'clone_server_array' do
         sa.should_receive(:launch).once
         clone_server_array(false, rc, '12345678', 'unit-test', 'release~123', 'frontend', 'staging', 'uswest0')
         $log.info('Checking that %s launched' % sa)
+    end
+end
 
-        expect(sa).to have_received(:launch).once
+describe 'min_instances_operational?' do
+
+    it 'should work' do
+        sa = double('server_array')
+        server = double('server')
+
+        allow(sa).to receive(:elasticity_params).and_return({'bounds' => {'min_count' => 2}})
+        allow(sa).to receive(:current_instances).and_return(sa)
+        allow(sa).to receive(:index).and_return([server, server])
+
+        allow(server).to receive(:state).and_return('operational')
+
+        expect(min_instances_operational?(sa)).to eq(true)
     end
 end

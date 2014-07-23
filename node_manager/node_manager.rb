@@ -221,7 +221,7 @@ end
 # there is enough of them to consider this array operational.
 #
 # * *Args*:
-#   - +server_array+ -> array object
+#   - +server_array+ -> RightScale server array object
 #
 # * *Returns*:
 #   - +boolean+ -> 
