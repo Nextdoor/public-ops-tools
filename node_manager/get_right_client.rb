@@ -12,6 +12,9 @@
 require 'rubygems'
 require 'rest-client'
 require 'right_api_client'
+require 'get_logger'
+
+$log = get_logger()
 
 require File.join(File.expand_path(File.dirname(__FILE__)), 'defaults.rb')
 

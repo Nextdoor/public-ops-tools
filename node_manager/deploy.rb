@@ -20,7 +20,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), 'node_manager.rb')
 # Global logger
 $log = get_logger()
 
-# Parse command line arguments.  Some defaults come from node_manager.rb
+# Parse command line arguments. Many variables below come from defaults.rb
 def parse_arguments()
   options = {
     :json => nil,
