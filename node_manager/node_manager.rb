@@ -433,8 +433,9 @@ end
 #   - +server_array_name+ -> string for server array name
 #   - +dryrun+ -> boolean for whether or not to dry run
 #   - +right_client+ -> instance for RightClient
+#   - +wait+ -> do not return until the array is deleted
 #
-def delete_server_array(dryrun, right_client, server_array_name, server_array)
+def delete_server_array(dryrun, right_client, server_array_name, server_array, wait=true)
   # Disable auto-scaling first
   if not dryrun
       params = { :server_array => {
@@ -462,11 +463,13 @@ def delete_server_array(dryrun, right_client, server_array_name, server_array)
       count = 0
     end
 
-    while count > 0
-      $log.info("#{count} instances of #{server_array.name} are still running ... wait for 1 min ...")
-      sleep 60
-      server_array = find_server_array(right_client, server_array_name)
-      count = server_array.instances_count
+    if wait do
+      while count > 0
+        $log.info("#{count} instances of #{server_array.name} are still running ... wait for 1 min ...")
+        sleep 60
+        server_array = find_server_array(right_client, server_array_name)
+        count = server_array.instances_count
+      end
     end
   end
 
