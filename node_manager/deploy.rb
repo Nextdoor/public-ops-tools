@@ -46,7 +46,7 @@ def parse_arguments()
       options[:build_url] = build_url;
     end
 
-    opts.on('-o', '--old_build_version OLD_BUILD_VERSION',
+    opts.on('-o', '--old_build_version [=OLD_BUILD_VERSION]',
             'Current install version string.') do |old_build_version|
       options[:old_build_version] = old_build_version;
     end
