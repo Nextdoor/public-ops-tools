@@ -160,6 +160,9 @@ def main()
   # Wait for all arrays to be empty before deleting them.
   $log.info('Checking if arrays are empty...')
   while all_arrays.count > 0
+
+    there_were_changes = false  # skip sleep when there were changes.
+
     for array in all_arrays
         count = array.instances_count
         $log.info('Array %s has %s instances.' % [array.name, count])
@@ -169,13 +172,14 @@ def main()
             else
                 $log.info('Deleteing the entire array...')
                 array.destroy
+                there_were_changes = true
             end
         end
     end
     # Once an array is destroyed we shouldn't be able to "find" it -- refresh
     # the list here. When `all_arrays` is empty, the loop ends.
     if not args[:dryrun]
-        sleep 60
+        sleep 60 unless there_were_changes
         all_arrays = find_server_arrays(right_client, old_short_version)
     elsif
         all_arrays = []  # Faking for dry run
