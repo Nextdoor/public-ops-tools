@@ -20,17 +20,30 @@ $log = get_logger()
 # Parse command line arguments. Many variables below come from defaults.rb
 def parse_arguments()
   options = {
-    :oauth2_api_url => $DEFAULT_OAUTH2_API_URL,
-    :refresh_token => nil,
-    :api_version => $DEFAULT_API_VERSION,
     :api_url => $DEFAULT_API_URL,
+    :api_version => $DEFAULT_API_VERSION,
+    :aws_access_key => nil,
+    :aws_secret_access_key => nil,
     :dryrun => nil,
     :env => $DEFAULT_ENV,
+    :oauth2_api_url => $DEFAULT_OAUTH2_API_URL,
     :old_build_version => nil,
+    :refresh_token => nil,
+    :region => $DEFAULT_REGION,
   }
 
   parser = OptionParser.new do|opts|
     opts.banner = "Usage: deploy.rb [options]"
+
+    opts.on('-a', '--aws_access_key ACCESS_KEY',
+            'AWS_ACCESS_KEY_ID.') do |aws_access_key|
+      options[:aws_access_key] = aws_access_key;
+    end
+
+    opts.on('-k', '--aws_secret_access_key SECRET',
+            'AWS_SECRET_ACCESS_KEY.') do |aws_secret_access_key|
+      options[:aws_secret_access_key] = aws_secret_access_key;
+    end
 
     opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
       options[:env] = env;
@@ -60,6 +73,10 @@ def parse_arguments()
       options[:refresh_token] = refresh_token
     end
 
+    opts.on('-r', '--region REGION', 'AWS Region.') do |region|
+      options[:region] = region;
+    end
+
     opts.on('-o', '--oauth2_api_url URL',
             'RightScale OAuth2 URL.') do |oauth2_api_url|
       options[:oauth2_api_url] = oauth2_api_url
@@ -70,15 +87,28 @@ def parse_arguments()
   parser.parse!
 
   if options[:env] != 'staging' and options[:env] != 'prod'
+    puts parser.summarize()
     abort('env must be staging or prod.')
   end
 
   if not options[:refresh_token]
+    puts parser.summarize()
     abort('You must specify a refresh token.')
   end
 
   if options[:old_build_version].nil?
+    puts parser.summarize()
     abort('--old_build_version is required.')
+  end
+
+  if options[:aws_access_key].nil?
+    puts parser.summarize()
+    abort('Thou shalt provide the AWS access key id!')
+  end
+
+  if options[:aws_secret_access_key].nil?
+    puts parser.summarize()
+    abort('Thou shalt provide the AWS secret access key!')
   end
 
   return options
@@ -94,6 +124,18 @@ def main()
                                   args[:api_url])
 
   old_short_version = args[:old_build_version]
+  #### Checking the SQS queue
+
+  while not queues_empty?(args[:aws_access_key], args[:aws_secret_access_key],
+                          args[:env], args[:region], old_short_version)
+    $log.info('Waiting for SQS "%s" to become empty...' % old_short_version)
+    if args[:dryrun]
+        $log.info('DRY RUN -- skipping the wait.')
+        break
+    end
+    sleep 60
+  end
+  $log.info('SQS queue is empty')
 
   #### Delete arrays
 

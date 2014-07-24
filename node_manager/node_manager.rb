@@ -18,6 +18,7 @@ require 'rubygems'
 require 'optparse'
 require 'pp'  # unused?
 require 'uri'
+require 'right_aws'
 
 require File.join(File.expand_path(File.dirname(__FILE__)), 'defaults.rb')
 require File.join(File.expand_path(File.dirname(__FILE__)),
