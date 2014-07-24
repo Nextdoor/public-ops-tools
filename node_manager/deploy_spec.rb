@@ -29,7 +29,7 @@ describe 'main()' do
         stub(:get_release_version) { 'unit-test-release-version' }
         stub(:get_short_version) { 'utrv' }
 
-        stub(:parse_json_file) { [] }  # Empty config!
+        stub(:parse_json_file) { {} }  # Empty config!
 
         expect { main() }.not_to raise_error
     end
