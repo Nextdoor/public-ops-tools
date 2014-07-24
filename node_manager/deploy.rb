@@ -128,6 +128,10 @@ def main()
 
   config = parse_json_file(args[:json])
 
+  $log.info('Deploy URL: %s' % args[:build_url])
+  $log.info('Will deploy new arrays: %s' % config.keys.join(', '))
+  $log.info('Old deployed version is: %s' % args[:old_build_version])
+
   #### Create new server arrays
 
   # Keep a list of newly created server arrays so we can check if they have
