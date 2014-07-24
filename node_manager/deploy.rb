@@ -32,6 +32,7 @@ def parse_arguments()
     :env => $DEFAULT_ENV,
     :build_url => nil,
     :old_build_version => nil,
+    :insomnia => nil
   }
 
   parser = OptionParser.new do|opts|
@@ -54,6 +55,10 @@ def parse_arguments()
     opts.on('-d', '--dryrun', 'Dryrun. Do not make changes.') do
       options[:dryrun] = true
       $log.info('Dryrun is on.  Not making any changes')
+    end
+
+    opts.on('-i', '--insomnia', 'Do not sleep between add/remove tasks to/from ELBs') do
+      options[:insomnia] = true
     end
 
     opts.on('-j', '--json (FILE|-)',
@@ -199,7 +204,10 @@ def main()
   if args[:old_build_version] != nil and args[:old_build_version] != ''
     # We can't easily check Multi-Run Executables status
     # So we wait 5 minutes before removing the old instances from the ELBs
-    sleep 360
+    if not args[:insomnia]
+      $log.info('Sleeping for 5 minutes waiting for ELBs add tasks, just to be safe...')
+      sleep 360
+    end
 
     # Init the list of tasks
     elb_tasks = []
