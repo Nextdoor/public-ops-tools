@@ -135,7 +135,6 @@ def main()
   server_arrays = []
 
   config.each do |service, params|
-
     $log.info('Booting new instances for %s...' % service)
 
     server_array_name = get_server_array_name(
@@ -173,17 +172,17 @@ def main()
 
   # Keep a list of update_elb tasks so we can check their status
   elb_tasks = []
-
   config.each do |service, params|
-    $log.info('Creating an "add" task for service "%s"' % service)
-
     server_array_name = get_server_array_name(
         args[:env], params['region'], service, short_version)
 
     if params.has_key? 'elb_name'
+      if params['elb_name'] != ''
+        $log.info('Creating an "add" task for service "%s"' % service)
         task = update_elb(args[:dryrun], right_client, params['elb_name'],
-                      server_array_name, args[:env], 'add')
+                          server_array_name, args[:env], 'add')
         elb_tasks.push(task)
+      end
     end
   end
 
@@ -193,8 +192,7 @@ def main()
 
 
   #### Remove the old instances from the ELB
-
-  if args[:old_build_version] == ''
+  if args[:old_build_version] != nil and args[:old_build_version] != ''
     # We can't easily check Multi-Run Executables status
     # So we wait 5 minutes before removing the old instances from the ELBs
     sleep 360
@@ -203,15 +201,16 @@ def main()
     elb_tasks = []
 
     config.each do |service, params|
-      $log.info('Creating an "remove" task for service "%s"' % service)
-
       old_server_array_name = get_server_array_name(
         args[:env], params['region'], service, args[:old_build_version])
 
       if params.has_key? 'elb_name'
-        task = update_elb(args[:dryrun], right_client, params['elb_name'],
-                          old_server_array_name, args[:env], 'remove')
-        elb_tasks.push(task)
+        if params['elb_name'] != ''
+          $log.info('Creating an "remove" task for service "%s"' % service)
+          task = update_elb(args[:dryrun], right_client, params['elb_name'],
+                            old_server_array_name, args[:env], 'remove')
+          elb_tasks.push(task)
+        end
       end
     end
 
