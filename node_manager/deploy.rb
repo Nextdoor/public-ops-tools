@@ -137,6 +137,14 @@ def main()
   $log.info('Will deploy new arrays: %s' % config.keys.join(', '))
   $log.info('Old deployed version is: %s' % args[:old_build_version])
 
+  #### Sanity Checks
+  if args[:old_build_version]
+      old_elbs = find_server_arrays(right_client, args[:old_build_version])
+      if a.count == 0
+          abort('ERROR: Could not find any arrays with "%s" in them.' % args[:old_build_version])
+      end
+  end
+
   #### Create new server arrays
 
   # Keep a list of newly created server arrays so we can check if they have
