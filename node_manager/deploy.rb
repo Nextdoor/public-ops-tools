@@ -152,9 +152,9 @@ def main()
       args[:env], params['region'], service, args[:old_build_version])
 
     old_elbs = find_server_array(right_client, old_server_array_name)
-    if old_elbs.nil? or old_elbs.count == 0
-        abort('ERROR: Failed a sanity check: ' +
-              'Could not find an array "%s".' % old_server_array_name)
+    if old_elbs.nil?
+      abort('ERROR: Failed a sanity check: ' +
+            'Could not find an array "%s".' % old_server_array_name)
     end
   end
 
