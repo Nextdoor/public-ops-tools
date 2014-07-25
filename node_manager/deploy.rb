@@ -139,13 +139,22 @@ def main()
 
   #### Sanity Checks
   if args[:old_build_version]
-      old_elbs = find_server_arrays(right_client, args[:old_build_version])
-      if a.count == 0
-          abort('ERROR: Could not find any arrays with "%s" in them.' % args[:old_build_version])
-      end
 
+    # Check that the version is in the right format
     if args[:old_build_version] !~ /.{5,6}-.{7}/
       abort('ERROR: old_build_version does not match our release pattern')
+    end
+
+    # Check that one of the arrays with this version already exists
+    service = config.first[0]
+    params = config.first[1]
+    old_server_array_name = get_server_array_name(
+      args[:env], params['region'], service, args[:old_build_version])
+
+    old_elbs = find_server_array(right_client, old_server_array_name)
+    if old_elbs.nil? or old_elbs.count == 0
+        abort('ERROR: Failed a sanity check: ' +
+              'Could not find an array "%s".' % old_server_array_name)
     end
   end
 
