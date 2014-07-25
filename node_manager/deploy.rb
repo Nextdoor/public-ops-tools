@@ -141,7 +141,7 @@ def main()
   if args[:old_build_version]
 
     # Check that the version is in the right format
-    if args[:old_build_version] !~ /.{5,6}-.{7}/
+    if args[:old_build_version] !~ /.*-.{7}/
       abort('ERROR: old_build_version does not match our release pattern')
     end
 
