@@ -123,36 +123,33 @@ end
 #
 def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
   if action == 'add'
-    pre_msg   = 'Adding %s to %s'
-    post_msg  = 'SUCCESS. Added %s to %s'
+    msg   = 'Adding %s to %s'
   elsif action == 'remove'
-    pre_msg  = 'Removing %s from %s'
-    post_msg = 'SUCCESS. Removed %s from %s'
+    msg  = 'Removing %s from %s'
   else
     abort('Action must be add or remove.')
   end
 
-  $log.debug("Grabbing #{action} and #{env}")
-  right_script = $RIGHT_SCRIPT[action][env]
-  $log.debug("right_script is #{right_script}")
-
-  $log.info('Looking for server_array %s.' % server_array_name)
-  server_array = find_server_array(right_client, server_array_name)
-
-  if not server_array
-    abort("FAILED.  Could not find #{server_array_name}")
-  end
-
-  $log.info(pre_msg % [server_array_name, elb_name])
   if dryrun
     $log.info('Dry run mode. Not operating on the ELB.')
   else
+    $log.debug("Grabbing #{action} and #{env}")
+    right_script = $RIGHT_SCRIPT[action][env]
+    $log.debug("right_script is #{right_script}")
+
+    $log.info('Looking for server_array %s.' % server_array_name)
+    server_array = find_server_array(right_client, server_array_name)
+
+    if not server_array
+      abort("FAILED.  Could not find #{server_array_name}")
+    end
+
+    $log.info(msg % [server_array_name, elb_name])
+
     return server_array.multi_run_executable(
              :right_script_href => right_script,
              :inputs => {'ELB_NAME' => "text:%s" % elb_name})
   end
-
-  $log.info(post_msg % [server_array_name, elb_name])
 end
 
 # Poll the given set of tasks for completion
