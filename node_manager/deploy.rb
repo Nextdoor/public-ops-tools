@@ -57,7 +57,7 @@ def parse_arguments()
       $log.info('Dryrun is on.  Not making any changes')
     end
 
-    opts.on('-s', '--sleep', 'Time to sleep between add/remove tasks to/from ELBs') do |sleep|
+    opts.on('-s', '--sleep NUM', 'Time to sleep between add/remove tasks to/from ELBs') do |sleep|
       options[:sleep] = sleep
     end
 
@@ -228,7 +228,7 @@ def main()
     # We can't easily check Multi-Run Executables status
     # So we wait 5 minutes before removing the old instances from the ELBs
     $log.info("Sleeping for #{args[:sleep]} seconds waiting for ELBs add tasks, just to be safe...")
-    sleep args[:sleep]
+    sleep Integer(args[:sleep])
 
     # Init the list of tasks
     elb_tasks = []
