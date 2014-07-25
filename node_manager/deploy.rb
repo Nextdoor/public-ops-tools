@@ -196,7 +196,9 @@ def main()
   end
 
   $log.info('Waiting for ELB "add" tasks...')
-  wait_for_elb_tasks(elb_tasks)
+  if not args[:dryrun]
+    wait_for_elb_tasks(elb_tasks)
+  end
   $log.info('ELB "add" tasks completed!')
 
 
@@ -227,7 +229,10 @@ def main()
     end
 
     $log.info('Waiting for ELB "remove" tasks...')
-    wait_for_elb_tasks(elb_tasks)
+    if not args[:dryrun]
+      wait_for_elb_tasks(elb_tasks)
+    end
+    $log.info('ELB "remove" tasks completed!')
 
     $log.info("Done!")
   end
