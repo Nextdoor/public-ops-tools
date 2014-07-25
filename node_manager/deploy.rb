@@ -143,6 +143,10 @@ def main()
       if a.count == 0
           abort('ERROR: Could not find any arrays with "%s" in them.' % args[:old_build_version])
       end
+
+    if args[:old_build_version] !~ /.{5,6}-.{7}/
+      abort('ERROR: old_build_version does not match our release pattern')
+    end
   end
 
   #### Create new server arrays
