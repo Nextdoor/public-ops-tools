@@ -170,14 +170,19 @@ def main()
     server_array_name = get_server_array_name(
         args[:env], params['region'], service, short_version)
 
+    server_array = find_server_array(right_client, server_array_name)
+    if not server_array.nil?
+      abort('Error: Server array #{server_array_name} already exists.')
+    end
+
     if not args[:dryrun]
       new_array = clone_server_array(
-        args[:dryrun], right_client,
-        params['tmpl_server_array'], server_array_name,
-        release_version,
-        service, args[:env], params['region'])
+          args[:dryrun], right_client,
+          params['tmpl_server_array'], server_array_name,
+          release_version,
+          service, args[:env], params['region'])
 
-     server_arrays.push(new_array)
+      server_arrays.push(new_array)
     end
   end
 
