@@ -139,24 +139,32 @@ def main()
 
   #### Sanity Checks
   if args[:old_build_version]
-
     # Check that the version is in the right format
     if args[:old_build_version] !~ /.*-.{7}/
       abort('ERROR: old_build_version does not match our release pattern')
     end
+  end
 
-    # Check that one of the arrays with this version already exists
-    service = config.first[0]
-    params = config.first[1]
-    old_server_array_name = get_server_array_name(
-      args[:env], params['region'], service, args[:old_build_version])
+  config.each do |service, params|
+    # Check for the arrays with the previous version exist
+    if args[:old_build_version]
+      old_server_array_name = get_server_array_name(
+        args[:env], params['region'], service, args[:old_build_version])
 
-    old_elbs = find_server_array(right_client, old_server_array_name)
-    if old_elbs.nil?
-      abort('ERROR: Failed a sanity check: ' +
-            'Could not find an array "%s".' % old_server_array_name)
+      old_elbs = find_server_array(right_client, old_server_array_name)
+      if old_elbs.nil?
+        abort('ERROR: Failed a sanity check: ' +
+              'Could not find an array "%s".' % old_server_array_name)
+      end
     end
   end
+
+  # Ensure we're not trying to re-deploy the current version
+  server_arrays = find_server_arrays(right_client, short_version)
+  if server_arrays.count > 0
+    abort("ERROR: Found existing server arrays with release #{short_version}.")
+  end
+
 
   #### Create new server arrays
 
@@ -172,12 +180,12 @@ def main()
 
     if not args[:dryrun]
       new_array = clone_server_array(
-        args[:dryrun], right_client,
-        params['tmpl_server_array'], server_array_name,
-        release_version,
-        service, args[:env], params['region'])
+          args[:dryrun], right_client,
+          params['tmpl_server_array'], server_array_name,
+          release_version,
+          service, args[:env], params['region'])
 
-     server_arrays.push(new_array)
+      server_arrays.push(new_array)
     end
   end
 
