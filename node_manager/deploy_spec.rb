@@ -24,8 +24,9 @@ describe 'main()' do
 
     it 'should no-op with empty config' do
 
+        stub(:find_server_arrays) { [] }
         stub(:parse_arguments) { {} }
-        stub(:get_right_client)
+        stub(:get_right_client) { }
         stub(:get_release_version) { 'unit-test-release-version' }
         stub(:get_short_version) { 'utrv' }
 
