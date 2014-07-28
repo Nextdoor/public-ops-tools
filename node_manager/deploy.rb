@@ -171,11 +171,18 @@ def main()
         args[:env], params['region'], service, short_version)
 
     if not args[:dryrun]
-      new_array = clone_server_array(
-        args[:dryrun], right_client,
-        params['tmpl_server_array'], server_array_name,
-        release_version,
-        service, args[:env], params['region'])
+      begin
+        new_array = clone_server_array(
+          args[:dryrun], right_client,
+          params['tmpl_server_array'], server_array_name,
+          release_version,
+          service, args[:env], params['region'])
+      rescue RightApi::ApiError => e
+        if e.message.include? '422'
+          abort('Error: Server array #{server_array_name} already exists.')
+        end
+        abort(e.message)
+      end
 
      server_arrays.push(new_array)
     end
