@@ -119,6 +119,33 @@ def parse_json_file(fname)
   return JSON.parse(json)
 end
 
+
+def _add_servers_to_elb(right_client, config, version)
+  $log.info('Adding each service to respecive ELB...')
+  # Keep a list of update_elb tasks so we can check their status
+  elb_tasks = []
+  config.each do |service, params|
+    server_array_name = get_server_array_name(
+        args[:env], params['region'], service, short_version)
+
+    if params.has_key? 'elb_name'
+      if params['elb_name'] != ''
+        $log.info('Creating an "add" task for service "%s"' % service)
+        task = update_elb(args[:dryrun], right_client, params['elb_name'],
+                          server_array_name, args[:env], 'add')
+        elb_tasks.push(task)
+      end
+    end
+  end
+
+  $log.info('Waiting for ELB "add" tasks...')
+  if not args[:dryrun]
+    wait_for_elb_tasks(elb_tasks)
+  end
+  $log.info('ELB "add" tasks completed!')
+end
+
+
 # Main function.
 #
 def main()
@@ -199,28 +226,15 @@ def main()
 
 
   #### Add the new server arrays to ELBs
-
-  # Keep a list of update_elb tasks so we can check their status
-  elb_tasks = []
-  config.each do |service, params|
-    server_array_name = get_server_array_name(
-        args[:env], params['region'], service, short_version)
-
-    if params.has_key? 'elb_name'
-      if params['elb_name'] != ''
-        $log.info('Creating an "add" task for service "%s"' % service)
-        task = update_elb(args[:dryrun], right_client, params['elb_name'],
-                          server_array_name, args[:env], 'add')
-        elb_tasks.push(task)
-      end
+  3.times do
+    begin
+      _add_servers_to_elb(right_client, config, short_version)
+    rescue ELBTaskException
+      $log.info('Some servers did not add themsleves to ELB. Re-running all tasks.')
+    else
+      break
     end
   end
-
-  $log.info('Waiting for ELB "add" tasks...')
-  if not args[:dryrun]
-    wait_for_elb_tasks(elb_tasks)
-  end
-  $log.info('ELB "add" tasks completed!')
 
 
   #### Remove the old instances from the ELB

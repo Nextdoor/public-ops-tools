@@ -18,6 +18,9 @@ require File.join(File.expand_path(File.dirname(__FILE__)), 'node_manager')
 # Global logger
 $log = get_logger()
 
+class ELBTaskException < Exception
+end
+
 # Parse command line arguments.  Some defaults come from node_manager.rb
 def elb_parse_arguments()
   options = {
@@ -155,13 +158,19 @@ end
 # Poll the given set of tasks for completion
 def wait_for_elb_tasks(tasks)
   iterations = 0
+  failures = 0
+
   while true
     completed_task_count = 0
     for task in tasks
       $log.debug('Checking task "%s"' % task)
-      if check_elb_task(task)
-        completed_task_count += 1
+      begin
+        completed = check_elb_task(task)
+      rescue ELBTaskException
+        failures +=1
       end
+
+      completed_task_count += 1 if completed
     end
 
     break if completed_task_count == tasks.length
@@ -172,6 +181,9 @@ def wait_for_elb_tasks(tasks)
       abort('Timeout waiting on RightScale task! (%s seconds)' % $RS_TIMEOUT)
     end
     sleep 1
+  end
+  if failures > 0
+    raise ELBTaskException('Some (%s) ELB tasks have failed!' % failures)
   end
 end
 
@@ -184,12 +196,12 @@ end
 #   - +boolean+ -> true = completed, false = incomplete
 #
 # * *Raises*:
-#   - +abort+ -> if a task has explicitly failed.
+#   - +ELBTaskException+ -> if a task has explicitly failed.
 def check_elb_task(task)
   if task.show.summary.include? 'completed'
     return true
   elsif task.show.summary.include? 'failed'
-    abort('FAILED.  RightScript task failed!')
+    raise ELBTaskException, 'FAILED. RightScript task failed!'
   else
     return false
   end
