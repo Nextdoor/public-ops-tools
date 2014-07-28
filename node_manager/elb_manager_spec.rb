@@ -126,15 +126,13 @@ describe "check_elb_task" do
     expect(check_elb_task(task)).to eq(false)
   end
 
-  it "should abort if a taks is failed" do
+  it "should return true if a taks is failed" do
     task = double('task')
     summary = double('summary')
     allow(summary).to receive(:summary).and_return('abc failed abc')
 
     allow(task).to receive(:show).and_return(summary)
 
-    expect {
-        check_elb_task(task)
-    }.to raise_error(/failed/)
+    expect(check_elb_task(task)).to eq(true)
   end
 end

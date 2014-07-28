@@ -181,18 +181,18 @@ end
 #   - +task+ -> a Task object that has a summary.
 #
 # * *Returns*:
-#   - +boolean+ -> true = completed, false = incomplete
-#
-# * *Raises*:
-#   - +abort+ -> if a task has explicitly failed.
+#   - +boolean+ -> true = completed (success or failure), false = incomplete
 def check_elb_task(task)
-  if task.show.summary.include? 'completed'
+  summary = task.show.summary
+  if summary.include? 'completed'
     return true
-  elsif task.show.summary.include? 'failed'
-    abort('FAILED.  RightScript task failed!')
-  else
-    return false
+  elsif summary.include? 'failed'
+    $log.error('FAILED. RightScript task failed!')
+    $log.error(summary)
+    return true
   end
+
+  return false
 end
 
 def check_rs_timeout(iterations)
