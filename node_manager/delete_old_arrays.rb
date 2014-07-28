@@ -35,6 +35,10 @@ def parse_arguments()
   parser = OptionParser.new do|opts|
     opts.banner = "Usage: deploy.rb [options]"
 
+    opts.on('-p', '--prefix PREFIX', 'Optional prefix string used when naming server arrays.') do |prefix|
+      options[:prefix] = prefix;
+    end
+
     opts.on('-a', '--aws_access_key ACCESS_KEY',
             'AWS_ACCESS_KEY_ID.') do |aws_access_key|
       options[:aws_access_key] = aws_access_key;
@@ -114,6 +118,16 @@ def parse_arguments()
   return options
 end
 
+# Checks if the given array has the prefix string in it's name
+#
+def check_prefix(prefix, array)
+  if array.name.include? prefix
+    return true
+  else
+    return nil
+  end
+end
+
 # Main function.
 #
 def main()
@@ -144,6 +158,7 @@ def main()
 
   # This issues an async task. We'll check the count later.
   for array in all_arrays
+    if check_prefix(args[:prefix], array)
       if not args[:dryrun]
           $log.info('Terminating array %s' % array.name)
 
@@ -155,6 +170,9 @@ def main()
       else
           $log.info('Would have terminated array %s' % array.name)
       end
+    else
+        $log.info("Skipping %s because it doesn't match the provided prefix" % array.name)
+    end
   end
 
   # Wait for all arrays to be empty before deleting them.
@@ -181,6 +199,11 @@ def main()
     if not args[:dryrun]
         sleep 60 unless there_were_changes
         all_arrays = find_server_arrays(right_client, old_short_version)
+        for array in all_arrays
+          if check_prefix(args[:prefix], array)
+            all_arrays.delete(array)
+          end
+        end
     elsif
         all_arrays = []  # Faking for dry run
         $log.info('Dry run -- pretending that all arrays have been deleted.')
