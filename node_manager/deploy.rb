@@ -38,6 +38,10 @@ def parse_arguments()
   parser = OptionParser.new do|opts|
     opts.banner = "Usage: deploy.rb [options]"
 
+    opts.on('-p', '--prefix PREFIX', 'Optional prefix string used in naming server arrays.') do |prefix|
+      options[:prefix] = prefix;
+    end
+
     opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
       options[:env] = env;
     end
@@ -194,15 +198,21 @@ def main()
   config.each do |service, params|
     $log.info('Booting new instances for %s...' % service)
 
-    server_array_name = get_server_array_name(
-        args[:env], params['region'], service, short_version)
+    if args[:prefix].length > 0
+      prefix = "#{args[:prefix]}-#{args[:env]}"
+    else
+      prefix = args[:env]
+    end
 
+    server_array_name = get_server_array_name(
+        prefix, params['region'], service, short_version)
+    
     if not args[:dryrun]
       new_array = clone_server_array(
         args[:dryrun], right_client,
         params['tmpl_server_array'], server_array_name,
         release_version,
-        service, args[:env], params['region'])
+        args[:env], params['region'])
 
      server_arrays.push(new_array)
     end
