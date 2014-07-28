@@ -210,16 +210,20 @@ def main()
 
   while true
     operational_array_count = 0
+    unhealthy_arrays = []
     for server_array in server_arrays
       # checks if the server array has the min number of operational instances
       if min_instances_operational?(server_array)
         operational_array_count += 1
+      else
+        unhealthy_arrays.push(server_array.name)
       end
     end
 
     # Break if all server arrays have the min number of operational instances
     break if operational_array_count == server_arrays.length
-    $log.info("Waiting for instances to boot...")
+
+    $log.info("Still waiting for %s" % unhealthy_arrays.join(','))
     sleep 60
   end
   $log.info('All needed arrays have booted.')
