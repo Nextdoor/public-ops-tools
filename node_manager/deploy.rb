@@ -119,6 +119,33 @@ def parse_json_file(fname)
   return JSON.parse(json)
 end
 
+
+def _add_servers_to_elb(right_client, config, version, env, dryrun)
+  $log.info('Adding each service to respecive ELB...')
+  # Keep a list of update_elb tasks so we can check their status
+  elb_tasks = []
+  config.each do |service, params|
+    server_array_name = get_server_array_name(
+        env, params['region'], service, version)
+
+    if params.has_key? 'elb_name'
+      if params['elb_name'] != ''
+        $log.info('Creating an "add" task for service "%s"' % service)
+        task = update_elb(dryrun, right_client, params['elb_name'],
+                          server_array_name, env, 'add')
+        elb_tasks.push(task)
+      end
+    end
+  end
+
+  $log.info('Waiting for ELB "add" tasks...')
+  if not dryrun
+    wait_for_elb_tasks(elb_tasks)
+  end
+  $log.info('ELB "add" tasks completed!')
+end
+
+
 # Main function.
 #
 def main()
@@ -199,28 +226,21 @@ def main()
 
 
   #### Add the new server arrays to ELBs
+  3.times { |run|
+    begin
+      _add_servers_to_elb(right_client, config, short_version, args[:env], args[:dryrun])
+    rescue ELBTaskException
+      $log.info('Some servers did not add themsleves to ELB.')
 
-  # Keep a list of update_elb tasks so we can check their status
-  elb_tasks = []
-  config.each do |service, params|
-    server_array_name = get_server_array_name(
-        args[:env], params['region'], service, short_version)
-
-    if params.has_key? 'elb_name'
-      if params['elb_name'] != ''
-        $log.info('Creating an "add" task for service "%s"' % service)
-        task = update_elb(args[:dryrun], right_client, params['elb_name'],
-                          server_array_name, args[:env], 'add')
-        elb_tasks.push(task)
+      if (run + 1) == 3
+        abort('3rd time was not the charm. Aborting.')
       end
-    end
-  end
 
-  $log.info('Waiting for ELB "add" tasks...')
-  if not args[:dryrun]
-    wait_for_elb_tasks(elb_tasks)
-  end
-  $log.info('ELB "add" tasks completed!')
+      $log.info('Rerunning...')
+    else
+      break
+    end
+  }
 
 
   #### Remove the old instances from the ELB
