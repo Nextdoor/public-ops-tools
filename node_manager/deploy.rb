@@ -238,21 +238,21 @@ def main()
 
 
   #### Add the new server arrays to ELBs
-  3.times { |run|
-    begin
-      _add_servers_to_elb(right_client, config, short_version, args[:env], args[:dryrun])
-    rescue ELBTaskException
-      $log.info('Some servers did not add themsleves to ELB.')
+  tries = 3
+  begin
+    _add_servers_to_elb(right_client, config, short_version, args[:env], args[:dryrun])
+  rescue ELBTaskException
+    $log.info('Some servers did not add themsleves to ELB.')
 
-      if (run + 1) == 3
-        abort('3rd time was not the charm. Aborting.')
-      end
-
-      $log.info('Rerunning...')
-    else
-      break
+    tries -= 1
+    if tries > 0
+      $log.info('Retrying...')
+      retry
     end
-  }
+
+    raise  # Re-raise the same exception
+  end
+
 
 
   #### Remove the old instances from the ELB
