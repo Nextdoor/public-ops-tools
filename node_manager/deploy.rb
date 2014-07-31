@@ -32,11 +32,16 @@ def parse_arguments()
     :env => $DEFAULT_ENV,
     :build_url => nil,
     :old_build_version => nil,
-    :sleep => 360
+    :sleep => 360,
+    :prefix => ''
   }
 
   parser = OptionParser.new do|opts|
     opts.banner = "Usage: deploy.rb [options]"
+
+    opts.on('-p', '--prefix PREFIX', 'Optional prefix string used in naming server arrays.') do |prefix|
+      options[:prefix] = prefix;
+    end
 
     opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
       options[:env] = env;
@@ -120,11 +125,13 @@ def parse_json_file(fname)
 end
 
 
-def _add_servers_to_elb(right_client, config, version, env, dryrun)
+def _add_servers_to_elb(right_client, config, version, env, prefix, dryrun)
   $log.info('Adding each service to respecive ELB...')
   # Keep a list of update_elb tasks so we can check their status
   elb_tasks = []
   config.each do |service, params|
+    service = _add_prefix(service, prefix)
+
     server_array_name = get_server_array_name(
         env, params['region'], service, version)
 
@@ -145,6 +152,16 @@ def _add_servers_to_elb(right_client, config, version, env, dryrun)
   $log.info('ELB "add" tasks completed!')
 end
 
+
+# Adds the CLI argument "prefix" to the service string
+# Used for easier ID of test/dev servers
+def _add_prefix(service, prefix)
+  if prefix.length > 0
+    return "#{prefix}-#{service}"
+  else
+    return service
+  end
+end
 
 # Main function.
 #
@@ -175,6 +192,8 @@ def main()
   # Check for the arrays with the previous version exist
   if args[:old_build_version]
     config.each do |service, params|
+      service = _add_prefix(service, args[:prefix])
+
       old_server_array_name = get_server_array_name(
         args[:env], params['region'], service, args[:old_build_version])
 
@@ -200,6 +219,8 @@ def main()
   server_arrays = []
 
   config.each do |service, params|
+    service = _add_prefix(service, args[:prefix])
+
     $log.info('Booting new instances for %s...' % service)
 
     server_array_name = get_server_array_name(
@@ -210,7 +231,7 @@ def main()
           args[:dryrun], right_client,
           params['tmpl_server_array'], server_array_name,
           release_version,
-          service, args[:env], params['region'])
+          args[:env], params['region'])
 
       server_arrays.push(new_array)
     end
@@ -240,7 +261,7 @@ def main()
   #### Add the new server arrays to ELBs
   tries = 3
   begin
-    _add_servers_to_elb(right_client, config, short_version, args[:env], args[:dryrun])
+    _add_servers_to_elb(right_client, config, short_version, args[:env], args[:prefix], args[:dryrun])
   rescue ELBTaskException
     $log.info('Some servers did not add themsleves to ELB.')
 
@@ -266,6 +287,8 @@ def main()
     elb_tasks = []
 
     config.each do |service, params|
+      service = _add_prefix(service, args[:prefix])
+
       old_server_array_name = get_server_array_name(
         args[:env], params['region'], service, args[:old_build_version])
 

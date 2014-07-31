@@ -138,7 +138,7 @@ describe 'clone_server_array' do
         stub(:find_server_array) { sa }
 
         sa.should_receive(:launch).once
-        clone_server_array(false, rc, '12345678', 'unit-test', 'release~123', 'frontend', 'staging', 'uswest0')
+        clone_server_array(false, rc, '12345678', 'unit-test', 'release~123', 'staging', 'uswest0')
         $log.info('Checking that %s launched' % sa)
     end
 end
