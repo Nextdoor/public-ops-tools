@@ -183,7 +183,7 @@ def wait_for_elb_tasks(tasks)
     sleep 1
   end
   if failures > 0
-    raise ELBTaskException('Some (%s) ELB tasks have failed!' % failures)
+    raise ELBTaskException, 'Some (%s) ELB tasks have failed!' % failures
   end
 end
 
