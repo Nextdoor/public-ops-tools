@@ -87,12 +87,17 @@ end
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +service+ -> name of the service running on this array
 #   - +version+ -> string used for versioning server arrays.
+#   - +prefix+ -> optional prefix used to label test/dev instances
 #
 # * *Returns* :
 #   - string for server array name, e.g., prod-taskworker-0007a-uswest2
 #
-def get_server_array_name(env, region, service, version)
-  return "#{env}-#{service}-#{version}-#{region}"
+def get_server_array_name(env, region, service, version, prefix)
+  if prefix.length > 0
+    return "#{env}-#{prefix}-#{service}-#{version}-#{region}"
+  else
+    return "#{env}-#{service}-#{version}-#{region}"
+  end
 end
 
 # Constructs puppet facts string for server array input.
@@ -163,7 +168,7 @@ end
 #
 def clone_server_array(dryrun, right_client, tmpl_server_array,
                        server_array_name,
-                       release_version, service, env, region)
+                       release_version, env, region)
 
   # Clone a server array
   if dryrun
@@ -544,7 +549,6 @@ def node_main()
                                     args[:tmpl_server_array],
                                     server_array_name,
                                     release_version,
-                                    args[:service],
                                     args[:env],
                                     args[:region])
 

@@ -59,11 +59,19 @@ end
 describe 'get_server_array_name' do
   it 'should compile server array names' do
     sa_name = get_server_array_name(
-        'staging', 'uswest1', 'fe', '0008a')
+        'staging', 'uswest1', 'fe', '0008a', 'test')
+    expect(sa_name).to eq('staging-test-fe-0008a-uswest1')
+
+    sa_name = get_server_array_name(
+        'staging', 'uswest1', 'fe', '0008a', '')
     expect(sa_name).to eq('staging-fe-0008a-uswest1')
 
     sa_name = get_server_array_name(
-        'staging', 'uswest1', 'taskworker', '0008a')
+        'staging', 'uswest1', 'taskworker', '0008a', 'test')
+    expect(sa_name).to eq('staging-test-taskworker-0008a-uswest1')
+
+    sa_name = get_server_array_name(
+        'staging', 'uswest1', 'taskworker', '0008a', '')
     expect(sa_name).to eq('staging-taskworker-0008a-uswest1')
   end
 end
@@ -138,7 +146,7 @@ describe 'clone_server_array' do
         stub(:find_server_array) { sa }
 
         sa.should_receive(:launch).once
-        clone_server_array(false, rc, '12345678', 'unit-test', 'release~123', 'frontend', 'staging', 'uswest0')
+        clone_server_array(false, rc, '12345678', 'unit-test', 'release~123', 'staging', 'uswest0')
         $log.info('Checking that %s launched' % sa)
     end
 end
