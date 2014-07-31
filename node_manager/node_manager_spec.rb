@@ -65,6 +65,10 @@ describe 'get_server_array_name' do
     sa_name = get_server_array_name(
         'staging', 'uswest1', 'taskworker', '0008a')
     expect(sa_name).to eq('staging-taskworker-0008a-uswest1')
+
+    sa_name = get_server_array_name(
+        'staging', 'uswest1', 'taskworker', '0008a', 'mwise')
+    expect(sa_name).to eq('staging-taskworker-mwise-0008a-uswest1')
   end
 end
 

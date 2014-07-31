@@ -30,6 +30,7 @@ def parse_arguments()
     :api_url => $DEFAULT_API_URL,
     :dryrun => nil,
     :env => $DEFAULT_ENV,
+    :prefix => nil,
     :build_url => nil,
     :old_build_version => nil,
     :sleep => 360
@@ -40,6 +41,10 @@ def parse_arguments()
 
     opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
       options[:env] = env;
+    end
+
+    opts.on('-p', '--prefix PREFIX', 'Deployment Server Prefix String.') do |prefix|
+      options[:prefix] = prefix;
     end
 
     opts.on('-b', '--build_url BUILD_URL',
@@ -120,13 +125,13 @@ def parse_json_file(fname)
 end
 
 
-def _add_servers_to_elb(right_client, config, version, env, dryrun)
+def _add_servers_to_elb(right_client, config, version, env, dryrun, prefix)
   $log.info('Adding each service to respecive ELB...')
   # Keep a list of update_elb tasks so we can check their status
   elb_tasks = []
   config.each do |service, params|
     server_array_name = get_server_array_name(
-        env, params['region'], service, version)
+        env, params['region'], service, version, prefix)
 
     if params.has_key? 'elb_name'
       if params['elb_name'] != ''
@@ -176,7 +181,7 @@ def main()
   if args[:old_build_version]
     config.each do |service, params|
       old_server_array_name = get_server_array_name(
-        args[:env], params['region'], service, args[:old_build_version])
+        args[:env], params['region'], service, args[:old_build_version], args[:prefix])
 
       old_elbs = find_server_array(right_client, old_server_array_name)
       if old_elbs.nil?
@@ -200,10 +205,10 @@ def main()
   server_arrays = []
 
   config.each do |service, params|
-    $log.info('Booting new instances for %s...' % service)
-
     server_array_name = get_server_array_name(
-        args[:env], params['region'], service, short_version)
+        args[:env], params['region'], service, short_version, args[:prefix])
+
+    $log.info("Booting new instances for #{service}: #{server_array_name}")
 
     if not args[:dryrun]
       new_array = clone_server_array(
@@ -240,7 +245,7 @@ def main()
   #### Add the new server arrays to ELBs
   tries = 3
   begin
-    _add_servers_to_elb(right_client, config, short_version, args[:env], args[:dryrun])
+    _add_servers_to_elb(right_client, config, short_version, args[:env], args[:dryrun], args[:prefix])
   rescue ELBTaskException
     $log.info('Some servers did not add themsleves to ELB.')
 
@@ -267,7 +272,7 @@ def main()
 
     config.each do |service, params|
       old_server_array_name = get_server_array_name(
-        args[:env], params['region'], service, args[:old_build_version])
+        args[:env], params['region'], service, args[:old_build_version], args[:prefix])
 
       if params.has_key? 'elb_name'
         if params['elb_name'] != ''

@@ -87,12 +87,13 @@ end
 #   - +region+ -> string for AWS regions, e.g., uswest2
 #   - +service+ -> name of the service running on this array
 #   - +version+ -> string used for versioning server arrays.
+#   - +prefix+  -> Optional name prefix
 #
 # * *Returns* :
 #   - string for server array name, e.g., prod-taskworker-0007a-uswest2
 #
-def get_server_array_name(env, region, service, version)
-  return "#{env}-#{service}-#{version}-#{region}"
+def get_server_array_name(env, region, service, version, prefix=nil)
+  return [env, service, prefix, version, region].compact.join('-')
 end
 
 # Constructs puppet facts string for server array input.

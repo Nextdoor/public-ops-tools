@@ -31,6 +31,7 @@ def parse_arguments()
     :api_url => $DEFAULT_API_URL,
     :dryrun => nil,
     :env => $DEFAULT_ENV,
+    :prefix => nil,
     :version_remove => nil,
     :version_add => nil,
     :sleep => DEFAULT_SLEEP
@@ -41,6 +42,10 @@ def parse_arguments()
 
     opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
       options[:env] = env;
+    end
+
+    opts.on('-p', '--prefix PREFIX', 'Deployment Server Prefix String.') do |prefix|
+      options[:prefix] = prefix;
     end
 
     opts.on('-o', '--version_remove VERSION',
@@ -119,13 +124,13 @@ def parse_json_file(fname)
 end
 
 
-def _add_servers_to_elb(right_client, config, version, env, dryrun)
+def _add_servers_to_elb(right_client, config, version, env, dryrun, prefix)
   $log.info('Adding each service to respecive ELB...')
   # Keep a list of update_elb tasks so we can check their status
   elb_tasks = []
   config.each do |service, params|
     server_array_name = get_server_array_name(
-        env, params['region'], service, version)
+        env, params['region'], service, version, prefix)
 
     if params.has_key? 'elb_name'
       if params['elb_name'] != ''
@@ -145,13 +150,13 @@ def _add_servers_to_elb(right_client, config, version, env, dryrun)
 end
 
 
-def _remove_servers_from_elb(right_client, config, version, env, dryrun)
+def _remove_servers_from_elb(right_client, config, version, env, dryrun, prefix)
   $log.info('Removing each service from respecive ELB...')
   # Keep a list of update_elb tasks so we can check their status
   elb_tasks = []
   config.each do |service, params|
     server_array_name = get_server_array_name(
-        env, params['region'], service, version)
+        env, params['region'], service, version, prefix)
 
     if params.has_key? 'elb_name'
       if params['elb_name'] != ''
@@ -194,7 +199,7 @@ def main()
   $log.info('Sanity Check: for the arrays with the "current" version exist')
   config.each do |service, params|
     old_server_array_name = get_server_array_name(
-      args[:env], params['region'], service, args[:version_remove])
+      args[:env], params['region'], service, args[:version_remove], args[:prefix])
 
     old_elbs = find_server_array(right_client, old_server_array_name)
     if old_elbs.nil?
@@ -206,7 +211,7 @@ def main()
   $log.info('Sanity Check: for the arrays with the "new" version exist')
   config.each do |service, params|
     old_server_array_name = get_server_array_name(
-      args[:env], params['region'], service, args[:version_add])
+      args[:env], params['region'], service, args[:version_add], args[:prefix])
 
     old_elbs = find_server_array(right_client, old_server_array_name)
     if old_elbs.nil?
@@ -221,7 +226,7 @@ def main()
   tries = 3
   begin
     _add_servers_to_elb(right_client,
-      config, args[:version_add], args[:env], args[:dryrun])
+      config, args[:version_add], args[:env], args[:dryrun], args[:prefix])
   rescue ELBTaskException
     $log.info('Some servers did not add themsleves to ELB.')
 
@@ -244,7 +249,7 @@ def main()
   tries = 3
   begin
     _remove_servers_from_elb(right_client,
-      config, args[:version_remove], args[:env], args[:dryrun])
+      config, args[:version_remove], args[:env], args[:dryrun], args[:prefix])
   rescue ELBTaskException
     $log.info('Some servers did not remove themsleves from ELB.')
 
