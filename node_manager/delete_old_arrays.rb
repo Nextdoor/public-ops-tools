@@ -20,6 +20,7 @@ $log = get_logger()
 # Parse command line arguments. Many variables below come from defaults.rb
 def parse_arguments()
   options = {
+    :json => nil,
     :api_url => $DEFAULT_API_URL,
     :api_version => $DEFAULT_API_VERSION,
     :aws_access_key => nil,
@@ -47,6 +48,11 @@ def parse_arguments()
 
     opts.on('-e', '--env ENV', 'Deployment environment string.') do |env|
       options[:env] = env;
+    end
+
+    opts.on('-j', '--json (FILE|-)',
+            'File or STDIN of JSON - containing server array and ELB IDs.') do |json|
+      options[:json] = json
     end
 
     opts.on('-o', '--old_build_version [=OLD_BUILD_VERSION]',
@@ -101,6 +107,11 @@ def parse_arguments()
     abort('--old_build_version is required.')
   end
 
+  if not options[:json]
+    puts parser.summarize()
+    abort('You must provide a JSON input file.')
+  end
+
   if options[:aws_access_key].nil?
     puts parser.summarize()
     abort('Thou shalt provide the AWS access key id!')
@@ -114,6 +125,17 @@ def parse_arguments()
   return options
 end
 
+# Parse provided JSON file and return output
+def parse_json_file(fname)
+  if fname == '-'  # Expect stdin
+      json = ARGF.read
+  else
+      file = open(fname)
+      json = file.read
+  end
+  return JSON.parse(json)
+end
+
 # Main function.
 #
 def main()
@@ -124,6 +146,9 @@ def main()
                                   args[:api_url])
 
   old_short_version = args[:old_build_version]
+
+  config = parse_json_file(args[:json])
+
   #### Checking the SQS queue
 
   while not queues_empty?(args[:aws_access_key], args[:aws_secret_access_key],
@@ -140,7 +165,15 @@ def main()
   #### Delete arrays
 
   $log.info('Searching for all arrays matching %s' % old_short_version)
-  all_arrays = find_server_arrays(right_client, old_short_version)
+
+  all_arrays = []
+  config.each do |service, params|
+    server_array_name = get_server_array_name(
+      args[:env], params['region'], service, old_short_version)
+
+    array = find_server_array(right_client, server_array_name)
+    all_arrays.push(array)
+  end
 
   # This issues an async task. We'll check the count later.
   for array in all_arrays
