@@ -52,6 +52,8 @@ describe 'update_elb' do
                           server_array => foo_sa,
                           action       => add" do
 
+      stub(:set_default_elb)
+
       @sa_mock.should_receive(:multi_run_executable).with(
         :right_script_href => '/api/right_scripts/438671001',
         :inputs => { 'ELB_NAME' => 'text:foo_elb' }) { @task_mock }
@@ -66,6 +68,8 @@ describe 'update_elb' do
                           elb          => foo_elb,
                           server_array => foo_sa,
                           action       => remove" do
+
+      stub(:set_default_elb)
 
       @sa_mock.should_receive(:multi_run_executable).with(
         :right_script_href => '/api/right_scripts/396277001',
