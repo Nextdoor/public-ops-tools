@@ -306,6 +306,7 @@ def node_parse_arguments()
     :build_url => nil,
     :release_number => nil,
     :delete => false,
+    :skip_sqs_queue_check => false,
     :aws_access_key_id => nil,
     :aws_secret_access_key => nil,
     :instances => $DEFAULT_NUM_INSTANCES,
@@ -384,6 +385,11 @@ def node_parse_arguments()
 
     opts.on('-d', '--delete BOOLEAN', 'Whether or not to delete this server array. Should be either "true" or "false".') do |delete|
       options[:delete] = (delete == 'true')
+    end
+
+    opts.on('-f', '--skip_sqs_queue_check BOOLEAN',
+            'Whether or not to skip checking sqs queue length. Should be either "true" or "false".') do |skip_sqs_queue_check|
+      options[:skip_sqs_queue_check] = (skip_sqs_queue_check == 'true')
     end
 
     opts.on('-i', '--instances INTEGER', 'Number of instances to launch in this server array.') do |instances|
@@ -507,7 +513,7 @@ def node_main()
   server_array_name = get_server_array_name(args[:env], args[:region],
                                             args[:service], short_version)
 
-  if args[:delete] and args[:taskworker]
+  if args[:delete] and args[:taskworker] and args[:skip_sqs_queue_check]
     ok_to_delete = queues_empty?(args[:aws_access_key_id],
                                     args[:aws_secret_access_key],
                                     args[:env], args[:region], short_version)
