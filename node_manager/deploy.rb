@@ -258,6 +258,19 @@ def main()
     raise  # Re-raise the same exception
   end
 
+  # Update ServerArrays' inputs to specify a default ELB
+  config.each do |service, params|
+    next unless params['elb_name']
+
+    server_array_name = get_server_array_name(
+        args[:env], params['region'], service, short_version, args[:prefix])
+    array = find_server_array(right_client, server_array_name)
+
+    $log.info('Changing default ELB for %s to %s' % [server_array_name, params['elb_name']])
+    array.next_instance.show.inputs.multi_update('inputs' => {
+        'ELB_NAME' => 'text:' + params['elb_name'] } )
+  end
+
 
 
   #### Remove the old instances from the ELB
