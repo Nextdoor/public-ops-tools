@@ -275,6 +275,11 @@ def queues_empty?(aws_access_key_id, aws_secret_access_key, env, region,
   sqs = RightAws::SqsGen2.new(aws_access_key_id, aws_secret_access_key,
                               {:server => server })
   queues = sqs.queues(prefix)
+  if queues.empty?
+    abort("No queue with prefix \"#{prefix}\" exists. Please double check if any " +
+          "taskworker with \"#{prefix}\" exists. If so, manually delete them on RightScale UI.")
+  end
+
   queues.each { |queue|
     queue_depth = queue.size
     $log.info(queue.name + ' queue depth: ' + queue_depth.to_s)
