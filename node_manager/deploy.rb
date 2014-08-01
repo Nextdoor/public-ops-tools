@@ -135,7 +135,7 @@ def _add_servers_to_elb(right_client, config, version, env, dryrun, prefix)
 
     if params.has_key? 'elb_name'
       if params['elb_name'] != ''
-        $log.info('Creating an "add" task for service "%s"' % service)
+        $log.info("Creating an 'add to elb' task for service #{server_array_name}")
         task = update_elb(dryrun, right_client, params['elb_name'],
                           server_array_name, env, 'add')
         elb_tasks.push(task)
@@ -191,12 +191,18 @@ def main()
     end
   end
 
-  # Ensure we're not trying to re-deploy the current version
-  server_arrays = find_server_arrays(right_client, short_version)
-  if server_arrays.count > 0
-    abort("ERROR: Found existing server arrays with release #{short_version}.")
-  end
+  # Ensure we're not trying to re-deploy the current version by making sure
+  # that we're not creating duplicate server arrays by name.
+  config.each do |service, params|
+    server_array_name = get_server_array_name(
+        args[:env], params['region'], service, short_version, args[:prefix])
 
+    $log.info("Searching for existing array named: #{server_array_name}")
+    server_arrays = find_server_arrays(right_client, server_array_name)
+    if server_arrays.count > 0
+      abort("ERROR: Found existing server array name matching #{server_array_name}.")
+    end
+  end
 
   #### Create new server arrays
 
@@ -276,7 +282,7 @@ def main()
 
       if params.has_key? 'elb_name'
         if params['elb_name'] != ''
-          $log.info('Creating an "remove" task for service "%s"' % service)
+          $log.info("Creating an 'remove from elb' task for array #{old_server_array_name}")
           task = update_elb(args[:dryrun], right_client, params['elb_name'],
                             old_server_array_name, args[:env], 'remove')
           elb_tasks.push(task)
