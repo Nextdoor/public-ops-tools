@@ -135,24 +135,31 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
 
   if dryrun
     $log.info('Dry run mode. Not operating on the ELB.')
-  else
-    $log.debug("Grabbing #{action} and #{env}")
-    right_script = $RIGHT_SCRIPT[action][env]
-    $log.debug("right_script is #{right_script}")
-
-    $log.info('Looking for server_array %s.' % server_array_name)
-    server_array = find_server_array(right_client, server_array_name)
-
-    if not server_array
-      abort("FAILED.  Could not find #{server_array_name}")
-    end
-
-    $log.info(msg % [server_array_name, elb_name])
-
-    return server_array.multi_run_executable(
-             :right_script_href => right_script,
-             :inputs => {'ELB_NAME' => "text:%s" % elb_name})
+    return
   end
+
+  $log.debug("Grabbing #{action} and #{env}")
+  right_script = $RIGHT_SCRIPT[action][env]
+  $log.debug("right_script is #{right_script}")
+
+  $log.info('Looking for server_array %s.' % server_array_name)
+  server_array = find_server_array(right_client, server_array_name)
+
+  if not server_array
+    abort("FAILED.  Could not find #{server_array_name}")
+  end
+
+  $log.info(msg % [server_array_name, elb_name])
+
+  if action == 'add'
+    set_default_elb(server_array, elb_name)
+  else
+    set_default_elb(server_array, 'ignore')
+  end
+
+  return server_array.multi_run_executable(
+           :right_script_href => right_script,
+           :inputs => {'ELB_NAME' => "text:%s" % elb_name})
 end
 
 # Poll the given set of tasks for completion
@@ -206,6 +213,21 @@ def check_elb_task(task)
     return false
   end
 end
+
+
+# Updates a ServerArray
+def set_default_elb(array, elb_name)
+  $log.info('Changing default ELB for %s to %s' % [array.name, elb_name])
+  if elb_name.nil?
+    input_value = 'ignore'
+  else
+    input_value = 'text' + elb_name
+  end
+
+  array.next_instance.show.inputs.multi_update('inputs' => {
+      'ELB_NAME' => input_value} )
+end
+
 
 def check_rs_timeout(iterations)
   if iterations >= $RS_TIMEOUT
