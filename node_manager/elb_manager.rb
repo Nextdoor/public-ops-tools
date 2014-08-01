@@ -221,7 +221,7 @@ def set_default_elb(array, elb_name)
   if elb_name.nil?
     input_value = 'ignore'
   else
-    input_value = 'text' + elb_name
+    input_value = 'text:' + elb_name
   end
 
   array.next_instance.show.inputs.multi_update('inputs' => {
