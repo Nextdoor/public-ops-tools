@@ -274,8 +274,19 @@ def queues_empty?(aws_access_key_id, aws_secret_access_key, env, region,
   server = region_to_server_map[region]
   sqs = RightAws::SqsGen2.new(aws_access_key_id, aws_secret_access_key,
                               {:server => server })
-  queues = sqs.queues(prefix)
-  if queues.empty?
+  queues = sqs.queues()
+
+  # We should be able to filter the queues with "sqs.queues(prefix)", then
+  # check the length of the array.  However, that doesn't work as advertised.
+  not_found = true
+  for q in queues:
+      if q.name.start_with? prefix
+        not_found = nil
+        break
+      end
+  end
+
+  if not_found
     abort("No queue with prefix \"#{prefix}\" exists. Please double check if any " +
           "taskworker with \"#{prefix}\" exists. If so, manually delete them on RightScale UI.")
   end
