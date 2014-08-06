@@ -31,6 +31,7 @@ def parse_arguments()
     :oauth2_api_url => $DEFAULT_OAUTH2_API_URL,
     :old_build_version => nil,
     :refresh_token => nil,
+    :skip_sqs_queue_check => false,
     :region => $DEFAULT_REGION,
   }
 
@@ -82,6 +83,11 @@ def parse_arguments()
     opts.on('-t', '--refresh_token TOKEN',
             'The refresh token for RightScale OAuth2.') do |refresh_token|
       options[:refresh_token] = refresh_token
+    end
+
+    opts.on('-f', '--skip_sqs_queue_check BOOLEAN',
+            'Whether or not to skip checking sqs queue length. Should be either "true" or "false".') do |skip_sqs_queue_check|
+      options[:skip_sqs_queue_check] = (skip_sqs_queue_check == 'true')
     end
 
     opts.on('-r', '--region REGION', 'AWS Region.') do |region|
@@ -156,16 +162,20 @@ def main()
 
   #### Checking the SQS queue
 
-  while not queues_empty?(args[:aws_access_key], args[:aws_secret_access_key],
-                          args[:env], args[:region], old_short_version)
-    $log.info('Waiting for SQS "%s" to become empty...' % old_short_version)
-    if args[:dryrun]
-        $log.info('DRY RUN -- skipping the wait.')
-        break
+  if not args[:skip_sqs_queue_check]
+    while not queues_empty?(args[:aws_access_key], args[:aws_secret_access_key],
+                            args[:env], args[:region], old_short_version)
+      $log.info('Waiting for SQS "%s" to become empty...' % old_short_version)
+      if args[:dryrun]
+          $log.info('DRY RUN -- skipping the wait.')
+          break
+      end
+      sleep 60
     end
-    sleep 60
+    $log.info('SQS queue is empty')
+  else
+    $log.info('Bypassing Queue Depth Check!')
   end
-  $log.info('SQS queue is empty')
 
   #### Delete arrays
 
