@@ -133,12 +133,23 @@ def _add_servers_to_elb(right_client, config, version, env, dryrun, prefix)
     server_array_name = get_server_array_name(
         env, params['region'], service, version, prefix)
 
+    $log.info('Looking for server_array %s.' % server_array_name)
+    server_array = find_server_array(right_client, server_array_name)
+
+    if not server_array
+      abort("FAILED.  Could not find #{server_array_name}")
+    end
+
     if params.has_key? 'elb_name'
       if params['elb_name'] != ''
-        $log.info("Creating an 'add to elb' task for service #{server_array_name}")
-        task = update_elb(dryrun, right_client, params['elb_name'],
-                          server_array_name, env, 'add')
-        elb_tasks.push(task)
+        if server_array.current_instances.index.count >= 1
+          $log.info("Creating an 'add to elb' task for service #{server_array_name}")
+          task = update_elb(dryrun, right_client, params['elb_name'],
+                            server_array_name, env, 'add')
+          elb_tasks.push(task)
+        else
+          $log.info("#{server_array_name} has no instances, not adding to #{elb_name}")
+        end
       end
     end
   end

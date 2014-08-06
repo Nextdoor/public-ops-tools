@@ -54,11 +54,12 @@ describe 'update_elb' do
 
       stub(:set_default_elb)
 
+      @sa_mock.should_receive(:name)
       @sa_mock.should_receive(:multi_run_executable).with(
         :right_script_href => '/api/right_scripts/438671001',
         :inputs => { 'ELB_NAME' => 'text:foo_elb' }) { @task_mock }
 
-      update_elb(false, @rs_mock, 'foo_elb', 'foo_sa', 'staging', 'add')
+      update_elb(false, @rs_mock, 'foo_elb', @sa_mock, 'staging', 'add')
 
     end
 
@@ -71,11 +72,12 @@ describe 'update_elb' do
 
       stub(:set_default_elb)
 
+      @sa_mock.should_receive(:name)
       @sa_mock.should_receive(:multi_run_executable).with(
         :right_script_href => '/api/right_scripts/396277001',
         :inputs => { 'ELB_NAME' => 'text:foo_elb' } ) { @task_mock }
 
-      update_elb(false, @rs_mock, 'foo_elb', 'foo_sa', 'staging', 'remove')
+      update_elb(false, @rs_mock, 'foo_elb', @sa_mock, 'staging', 'remove')
     end
 
 end

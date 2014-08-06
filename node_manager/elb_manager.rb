@@ -111,12 +111,12 @@ def elb_parse_arguments()
 end
 
 # Add or remove all instances of a server array to an ELB.
-# 
+#
 # * *Args*:
 #   - +dryrun+ -> `boolean` to not invoke any API calls.
 #   - +right_client+ -> instance of RightClient as expected by find_server_array
 #   - +elb_name+ -> string for the name of the ELB
-#   - +server_array_name+ -> string for the server array name
+#   - +server_array+ -> string for the server array name
 #   - +env+ -> string for environment (defaults.rb). Can be one of
 #     - staging
 #     - prod
@@ -124,7 +124,7 @@ end
 #     - add
 #     - remove
 #
-def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
+def update_elb(dryrun, right_client, elb_name, server_array, env, action)
   if action == 'add'
     msg   = 'Adding %s to %s'
   elsif action == 'remove'
@@ -142,14 +142,7 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
   right_script = $RIGHT_SCRIPT[action][env]
   $log.debug("right_script is #{right_script}")
 
-  $log.info('Looking for server_array %s.' % server_array_name)
-  server_array = find_server_array(right_client, server_array_name)
-
-  if not server_array
-    abort("FAILED.  Could not find #{server_array_name}")
-  end
-
-  $log.info(msg % [server_array_name, elb_name])
+  $log.info(msg % [server_array.name, elb_name])
 
   if action == 'add'
     set_default_elb(server_array, elb_name)
