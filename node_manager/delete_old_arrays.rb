@@ -87,7 +87,7 @@ def parse_arguments()
 
     opts.on('-f', '--skip_sqs_queue_check BOOLEAN',
             'Whether or not to skip checking sqs queue length. Should be either "true" or "false".') do |skip_sqs_queue_check|
-      options[:skip_sqs_queue_check] = (skip_sqs_queue_check == 'true')
+      options[:skip_sqs_queue_check] = true
     end
 
     opts.on('-r', '--region REGION', 'AWS Region.') do |region|
