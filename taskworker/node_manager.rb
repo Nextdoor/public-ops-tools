@@ -298,7 +298,7 @@ def are_queues_empty(args)
   aws_secret_access_key = args[:aws_secret_access_key]
   env = args[:env]
   region = args[:region]
-  prefix = env + '-tasks-' + args[:queue_prefix]
+  prefix = env + '-' + args[:queue_prefix]
 
   region_to_server_map = {
     'uswest1' => 'sqs.us-west-1.amazonaws.com',
