@@ -138,6 +138,8 @@ describe 'clone_server_array' do
         allow(sa).to receive(:index)
 
         stub(:get_puppet_facts) { {} }
+        stub(:sleep)
+        stub(:find_server_array) { sa }
 
         sa.should_receive(:launch).once
         clone_server_array(false, rc, '12345678', 'unit-test', 'release~123', 'frontend', 'staging', 'uswest0')
