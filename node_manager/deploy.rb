@@ -270,8 +270,9 @@ def main()
   if args[:old_build_version] != nil and args[:old_build_version] != ''
     # We can't easily check Multi-Run Executables status
     # So we wait 5 minutes before removing the old instances from the ELBs
-    $log.info("Sleeping for #{args[:sleep]} seconds waiting for ELBs add tasks, just to be safe...")
-    sleep Integer(args[:sleep])
+    if not args[:dryrun]
+      $log.info("Sleeping for #{args[:sleep]} seconds waiting for ELBs add tasks, just to be safe...")
+      sleep Integer(args[:sleep])
 
     # Init the list of tasks
     elb_tasks = []
