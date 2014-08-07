@@ -138,7 +138,9 @@ def _add_servers_to_elb(right_client, config, version, env, dryrun, prefix)
         $log.info("Creating an 'add to elb' task for service #{server_array_name}")
         task = update_elb(dryrun, right_client, params['elb_name'],
                           server_array_name, env, 'add')
-        elb_tasks.push(task)
+        if task
+          elb_tasks.push(task)
+        end
       end
     end
   end
