@@ -157,9 +157,18 @@ def update_elb(dryrun, right_client, elb_name, server_array_name, env, action)
     set_default_elb(server_array, 'ignore')
   end
 
-  return server_array.multi_run_executable(
-           :right_script_href => right_script,
-           :inputs => {'ELB_NAME' => "text:%s" % elb_name})
+  begin
+    return server_array.multi_run_executable(
+            :right_script_href => right_script,
+            :inputs => {'ELB_NAME' => "text:%s" % elb_name})
+  rescue => e
+    if e.message.include? 'ResourceNotFound: No instances'
+      $log.info("#{server_array_name} has no running instances, not adding to #{elb_name}")
+      return nil
+    else
+      raise
+    end
+  end
 end
 
 # Poll the given set of tasks for completion
