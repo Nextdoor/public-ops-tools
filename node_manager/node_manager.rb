@@ -168,31 +168,36 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
 
   # Clone a server array
   if dryrun
-    $log.info("DRY-RUN: Would have created server array #{server_array_name}")
+    $log.info("SUCCESS. Created server array #{server_array_name}")
     return
   end
 
-  # Clone the array and get a reference back from it right away
   new_server_array = right_client.server_arrays(
                        :id => tmpl_server_array).show.clone.show
-  instances = new_server_array.elasticity_params['bounds']['min_count'].to_i
 
-  # Patch the inputs on the newly created array so that Puppet launches
-  # the right version of our code.
-  puppet_facts = get_puppet_facts(
-                   new_server_array.next_instance.show.inputs.index,
-                   region, env, release_version)
-  new_server_array.next_instance.show.inputs.multi_update(
-    'inputs' => {'nd-puppet/config/facts' => puppet_facts})
-  $log.info("Updated puppet input #{puppet_facts}.")
+  instances = new_server_array.elasticity_params['bounds']['min_count'].to_i
 
   # Rename the newly created server array
   params = { :server_array => {
       :name => server_array_name,
       :state => 'enabled'
   }}
+
   new_server_array.update(params)
+
+  # Repeated calls with the same server_array_name can lead to failures
+  # since RightScale uses the old name with 'v1' appended.  This sleeping
+  # gives the rename time to complete.
+  sleep 5
+
   $log.info("SUCCESS. Created server array #{server_array_name}")
+
+  puppet_facts = get_puppet_facts(
+                   new_server_array.next_instance.show.inputs.index,
+                   region, env, release_version)
+  new_server_array.next_instance.show.inputs.multi_update('inputs' => {
+    'nd-puppet/config/facts' => puppet_facts})
+  $log.info("Updated puppet input #{puppet_facts}.")
 
   # Launch new instances
   for i in 1..instances
@@ -204,7 +209,11 @@ def clone_server_array(dryrun, right_client, tmpl_server_array,
     end
   end
 
-  # Finally return our array now that instances are launching...
+  new_server_array = nil
+  while not new_server_array
+    new_server_array = find_server_array(right_client, server_array_name)
+  end
+
   return new_server_array
 end
 
