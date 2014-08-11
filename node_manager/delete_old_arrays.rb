@@ -199,7 +199,15 @@ def main()
           array.update({ :server_array => { :state => 'disabled' }})
 
           # Terminate every server instance in the array.
-          array.multi_terminate(terminate_all=true)
+          begin
+              array.multi_terminate(terminate_all=true)
+          rescue => e
+              if e.message.include? 'ResourceNotFound: No instances'
+                  $log.info("#{server_array_name} has no running instances, not attempting to terminate")
+              else
+                  raise
+              end
+          end
       else
           $log.info('Would have terminated array %s' % array.name)
       end
