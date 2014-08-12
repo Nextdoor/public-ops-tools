@@ -253,7 +253,7 @@ end
 def queues_empty?(aws_access_key_id, aws_secret_access_key, env, region,
                      queue_name)
 
-  prefix = env + '-' + queue_name
+  prefix = env + '-tasks-' + queue_name
 
   region_to_server_map = {
     'uswest1' => 'sqs.us-west-1.amazonaws.com',
