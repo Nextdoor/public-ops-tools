@@ -203,7 +203,7 @@ def main()
               array.multi_terminate(terminate_all=true)
           rescue => e
               if e.message.include? 'ResourceNotFound: No instances'
-                  $log.info("#{server_array_name} has no running instances, not attempting to terminate")
+                  $log.info("#{array.name} has no running instances, not attempting to terminate")
               else
                   raise
               end
