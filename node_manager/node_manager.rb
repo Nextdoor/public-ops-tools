@@ -224,9 +224,17 @@ def min_instances_operational?(server_array)
   operational_instances = 0
   min_instances = server_array.elasticity_params['bounds']['min_count'].to_i
 
-  for instance in server_array.current_instances.index
-    if instance.state == 'operational'
-      operational_instances += 1
+  begin
+    for instance in server_array.current_instances.index
+      if instance.state == 'operational'
+        operational_instances += 1
+      end
+    end
+  rescue => e
+    if e.message.include? 'HTTP Code: 502'
+      $log.info('RightScale API is down!')
+    else
+      raise
     end
   end
 
