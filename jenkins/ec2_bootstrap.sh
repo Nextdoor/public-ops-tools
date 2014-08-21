@@ -75,7 +75,8 @@ DEFAULT_PACKAGES=" \
   libmemcached-dev \
   python3 \
   go \
-  npm"
+  npm \
+  swig"
 
 # Ruby and all the Ruby dependencies (RVM is manually installed later
 # automatically by the RVM Jenkins Plugin)
