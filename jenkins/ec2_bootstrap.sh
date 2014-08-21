@@ -231,6 +231,23 @@ create_apt_sources() {
     echo -e "${S3_REPOS}" > /etc/apt/sources.list.d/s3.sources.list
     apt-get -y -q update
   fi
+
+  # Configure apt pinning
+  cat > /etc/apt/preferences.d/stable.pref <<EOF
+# stable
+Explanation: : stable
+Package: *
+Pin: release n=stable
+Pin-Priority: 1100
+EOF
+
+  cat > /etc/apt/preferences.d/unstable.pref <<EOF
+# unstable
+Explanation: : unstable
+Package: *
+Pin: origin "s3.amazonaws.com"
+Pin-Priority: 1001
+EOF
 }
 
 install_packages() {
