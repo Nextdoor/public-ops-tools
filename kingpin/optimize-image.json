@@ -1,0 +1,41 @@
+{ "desc": "BootImage Optimization",
+  "actor": "group.Sync",
+  "options" : {
+    "acts": [
+        { "desc": "Change Kernel",
+          "actor": "rightscale.server_array.Update",
+          "options": {
+            "array": "%TEMPLATE_ARRAY%",
+            "inputs": {"KERNEL_ID_OVERRIDE": "text:aki-e68f11d6"}
+          }
+        },
+        { "desc": "Launch",
+          "actor": "rightscale.server_array.Launch",
+          "options": {
+            "array": "%TEMPLATE_ARRAY%",
+            "count": 1
+          }
+        },
+        { "desc": "Clean",
+          "actor": "rightscale.server_array.Execute",
+          "options": {
+            "array": "%TEMPLATE_ARRAY%",
+            "script": "nd-cleaner::default",
+            "inputs": {}
+            } },
+        { "desc": "Optimize",
+          "actor": "rightscale.server_array.Execute",
+          "options": {
+            "array": "%TEMPLATE_ARRAY%",
+            "script": "EC2 Optimize Image for boot (Preview Release) (Nextdoor-Version)",
+            "inputs": {}
+            } },
+        { "desc": "Terminate",
+          "actor": "rightscale.server_array.Terminate",
+          "options": {
+            "array": "%TEMPLATE_ARRAY%",
+            "terminate": false
+            } }
+    ]
+  }
+}
