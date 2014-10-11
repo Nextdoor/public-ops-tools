@@ -172,12 +172,12 @@ def main()
   $log.info('Old deployed version is: %s' % args[:old_build_version])
 
   #### Sanity Checks
-  if args[:old_build_version]
-    # Check that the version is in the right format
-    if args[:old_build_version] !~ /.*-.{7}/
-      abort('ERROR: old_build_version does not match our release pattern')
-    end
-  end
+  #if args[:old_build_version]
+  #  # Check that the version is in the right format
+  #  if args[:old_build_version] !~ /.*-.{7}/
+  #    abort('ERROR: old_build_version does not match our release pattern')
+  #  end
+  #end
 
   # Check for the arrays with the previous version exist
   if args[:old_build_version]
