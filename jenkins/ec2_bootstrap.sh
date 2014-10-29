@@ -257,6 +257,9 @@ install_packages() {
 }
 
 install_ruby() {
+  # Install gpg key for rvm
+  gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
+
   # Set up Ruby, but explicitly uninstall RVM. This lets Jenkins handle the install
   # of RVM.
   apt-get --purge -y --force-yes remove ruby-rvm
