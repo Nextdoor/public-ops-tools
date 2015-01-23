@@ -3,10 +3,10 @@
 #
 # Call the script like this:
 # 
-# GITHUB="https://raw.githubusercontent.com/Nextdoor/public-ops-tools/master/" \
-# AWS_ACCESS_KEY_ID=<something> \
-# AWS_SECRET_ACCESS_KEY=<something> \
-#     curl -q --insecure $GITHUB/jenkins/executors/django_cowbuilder_provision.sh | /bin/bash
+# export GITHUB="https://raw.githubusercontent.com/Nextdoor/public-ops-tools/master/" 
+# export AWS_ACCESS_KEY_ID=<something> 
+# export AWS_SECRET_ACCESS_KEY=<something> 
+# curl -q --insecure $GITHUB/jenkins/executors/django_cowbuilder_provision.sh | /bin/bash
 
 # apt-transport-https accessed repos
 export HTTPS_REPOS="
@@ -56,7 +56,7 @@ time sudo /bin/bash -x bootstrap.sh
 time sudo DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q purge nodejs
 
 # Use the '-y' flag with apt-get (for non-interactive installs)
-sudo cat > /etc/apt.conf.d/nextdoor.conf << EOF
+sudo cat > /etc/apt/apt.conf.d/nextdoor.conf << EOF
 APT {
        Get {
                 Assume-Yes "true";
