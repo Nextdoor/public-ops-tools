@@ -56,7 +56,8 @@ time sudo /bin/bash -x bootstrap.sh
 time sudo DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q purge nodejs
 
 # Use the '-y' flag with apt-get (for non-interactive installs)
-sudo cat > /etc/apt/apt.conf.d/nextdoor.conf << EOF
+[[ ! -f /etc/apt/apt.conf.d/30apt_assume_yes.conf ]] &&
+    sudo su root -c "cat > /etc/apt/apt.conf.d/30apt_assume_yes.conf" << EOF
 APT {
        Get {
                 Assume-Yes "true";
@@ -64,16 +65,7 @@ APT {
 };
 EOF
 
+# Enable login to the slave by appending public keys to this file from the Jenkins config.
 mkdir -p ~/.ssh
-
-# Matt Terry's key
-echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCps4u1tFiCjNa6k9RMeOS4aAjOmpEPOmv6ljoSLJIaowLP9Jf2YdqdVNflgiSFE1cwpXPE8KBAatcfss2y386R93XJLHiYrxitIjzHB2IVXRoxKBbHtEb5oPLGid/WeeUjMKESZYpnEZwk4jU2wNTJt0ncy8GOmbIyWSgX+QVTVKb26VaVWGkUYVsM0qr8J/y0eCX8n7Me8l2yNTbY2PF7POTemWyqK6fHxXxCDvy7LYXYXhHXPOxqGcz6KzcTvGIdgm1FlLQqpTk/62yGPGMQ6UrOckKvOMZt0unwdDukiFhiSjS2OkmOCiBY8dz9iHwvGi0AM0oPbJwgP1mxxZgF mrterry@mrterry-dev.localdomain" >> ~/.ssh/authorized_keys
-
-# Charles' key
-echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+PMBKRwRV3LtpH69XG9mmM5qTDQGa6STC1+/yd4BJsNN+gfJHdw7ULMwN4UtTLX+BJXPOQ4maE7F1dSjkRLM8pGOdReCM1NiJFKY9ECTnaNaJ5GnoNqbAGkKyGC85Ev8sXJkPo7rrO5VSFOlURnwvtLDeV2ARRh0uFEVX2/dogGeSUP+IUKdY1HnJQIcdKV1JgPMFO6JMCL/yaPEgQF5eM5ZBjWXNxfCQQhpC25xTU6f86np2kICV0etIudyseod+wyLUuNk/sDvSpim8xzohT2XMFSHmvFTx10FqwgQ6Ol20lba3qiko5kRwUo3mbFxTw50r0cGtxkglrVgjLzoB charlesmclaughlin@charles.local" >> ~/.ssh/authorized_keys
-
-# Chuck's key
-echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCmMToxbTYqV7u8SIDNUhICSchcI04n066hdLhfMtnJItpG5KaRulM6wQx/8bmnqa+/fu+tUBlIXyo0yodDBYfSMXjKTMBVhZTVOmhITpAA4Slo88Bg7l90GfRy5TtKjx7UM2w13wp7BkHnwKidUPeFr1Cfm4GcrvjkeWRbf8SOpC0aqthYEu9ljFK3hryzc4ttdAugQ+u2GaJD9haxuZ5xHQzTFZadEh7ALWKYUae4RczB4n6dFRbDEUNYjbtZ+iNryxfhrU6KDGaeHwiez0umDUdZpzGjjCm0le13S35Y3hwRbXVzcG40YROWUfZ9kj0J7P9wxPZAthjHWbn3S4c1 chuck@2014-05-22" >> ~/.ssh/authorized_keys
-
 chown ubuntu ~/.ssh/authorized_keys
 chmod 0600 ~/.ssh/authorized_keys
