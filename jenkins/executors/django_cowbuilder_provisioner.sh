@@ -27,7 +27,8 @@ BOOTSCRIPT="${GITHUB}/jenkins/ec2_bootstrap.sh"
 curl -q --insecure $BOOTSCRIPT | sudo -E /bin/bash
 
 # Move /tmp and /var to the big partition.
-for DIR in /tmp /var; do
+# well, just /tmp until we figure out what to do about docker's /tmp/aufs.
+for DIR in /tmp; do
     [[ -e /mnt/$DIR ]] && continue
     echo "Bind-mount $DIR to /mnt$DIR"
     sudo mv $DIR /mnt$DIR
