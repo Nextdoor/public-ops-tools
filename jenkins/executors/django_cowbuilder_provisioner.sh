@@ -26,13 +26,14 @@ BOOTSCRIPT="${GITHUB}/jenkins/ec2_bootstrap.sh"
 # Execute the bootstrap script, preserving the environment variables above.
 curl -q --insecure $BOOTSCRIPT | sudo -E /bin/bash
 
+set -x
 # Move /tmp and /var to the big partition.
 # well, just /tmp until we figure out what to do about docker's /tmp/aufs.
-for DIR in /tmp; do
+for DIR in /tmp /var/cache; do
     [[ -e /mnt/$DIR ]] && continue
     echo "Bind-mount $DIR to /mnt$DIR"
     sudo mv $DIR /mnt$DIR
-    sudo mkdir $DIR
+    sudo mkdir -p $DIR
     echo "/mnt$DIR	$DIR	none	bind	0	0" | sudo tee -a /etc/fstab
     sudo mount $DIR
 done
@@ -68,5 +69,5 @@ EOF
 
 # Enable login to the slave by appending public keys to this file from the Jenkins config.
 mkdir -p ~/.ssh
-chown ubuntu ~/.ssh/authorized_keys
+touch ~/.ssh/authorized_keys
 chmod 0600 ~/.ssh/authorized_keys
