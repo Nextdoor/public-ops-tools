@@ -34,8 +34,7 @@ for DIR in /tmp /var/cache; do
     echo "Bind-mount $DIR to /mnt$DIR"
     sudo mv $DIR /mnt$DIR
     sudo mkdir -p $DIR
-    echo "/mnt$DIR	$DIR	none	bind	0	0" | sudo tee -a /etc/fstab
-    sudo mount $DIR
+    sudo mount --bind /mnt/$DIR $DIR
 done
 
 # Create a sentinel file so the first continuous build will
