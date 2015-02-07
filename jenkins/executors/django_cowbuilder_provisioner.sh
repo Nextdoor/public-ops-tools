@@ -44,6 +44,8 @@ done
 # Create a sentinel file so the first continuous build will
 # install the Debian packages that the builds need.
 touch /tmp/FIRST_TIME
+touch /tmp/FIRST_TIME_GO
+touch /tmp/FIRST_TIME_GO_PHOTO
 
 ## COWBUILDER SETUP
 BASE="${GITHUB}/jenkins/cowbuilder"
@@ -52,13 +54,6 @@ for file in $FILES; do
   curl --silent --insecure -O ${BASE}/${file}
 done
 time sudo /bin/bash -x bootstrap.sh
-
-## CUSTOM DJANGO STUFF
-
-# Uninstall NodeJS (installed on default build systems).
-# Our node-nextdoor package conflicts with it.
-# TODO: Fix that!
-time sudo DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -q purge nodejs
 
 # Use the '-y' flag with apt-get (for non-interactive installs)
 [[ ! -f /etc/apt/apt.conf.d/30apt_assume_yes.conf ]] &&

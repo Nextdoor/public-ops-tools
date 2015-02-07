@@ -55,27 +55,7 @@ DEBIAN_BUILD_PACKAGES=" \
 
 DEFAULT_PACKAGES=" \
   ${DEBIAN_BUILD_PACKAGES}
-  default-jre-headless \
   git \
-  libcommons-codec-java \
-  daemon \
-  expect \
-  gawk \
-  ia32-libs lib32stdc++6 \
-  libyaml-dev \
-  libsqlite3-dev \
-  sqlite3 \
-  autoconf \
-  libgdbm-dev \
-  libncurses5-dev \
-  automake \
-  libtool \
-  bison \
-  libffi-dev \
-  libmemcached-dev \
-  python3 \
-  go \
-  npm \
   swig"
 
 # Ruby and all the Ruby dependencies (RVM is manually installed later
