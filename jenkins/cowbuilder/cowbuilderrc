@@ -23,12 +23,12 @@ if [ -n "${ARCH}" ]; then
     NAME="$NAME-$ARCH"
     DEBOOTSTRAPOPTS=("--arch" "$ARCH" "${DEBOOTSTRAPOPTS[@]}")
 fi
-BASETGZ="/var/cache/pbuilder/$NAME-base.tgz"
-BASEPATH="/var/cache/pbuilder/$NAME-base.cow/"
+BASETGZ="/mnt/pbuilder/$NAME-base.tgz"
+BASEPATH="/mnt/pbuilder/$NAME-base.cow/"
 DISTRIBUTION="$DIST"
-BUILDRESULT="/var/cache/pbuilder/$NAME/result/"
-APTCACHE="/var/cache/pbuilder/$NAME/aptcache/"
-BUILDPLACE="/var/cache/pbuilder/build/"
+BUILDRESULT="/mnt/pbuilder/$NAME/result/"
+APTCACHE="/mnt/pbuilder/$NAME/aptcache/"
+BUILDPLACE="/mnt/pbuilder/build/"
 
 # Ubuntu configuration
 MIRRORSITE="http://$UBUNTU_MIRROR/ubuntu/"
