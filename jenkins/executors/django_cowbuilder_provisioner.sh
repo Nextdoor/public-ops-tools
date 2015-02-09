@@ -28,8 +28,8 @@ curl -q --insecure $BOOTSCRIPT | sudo -E /bin/bash
 
 # Enable login to the slave.
 mkdir -m 755 -p ~/.ssh
-echo "$AUTHORIZED_KEYS" > ~/.ssh/authorized_keys
-chmod 400 ~/.ssh/authorized_keys
+echo "$AUTHORIZED_KEYS" >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
 
 # Move /tmp and /var/cache to the big partition.
 sudo mkdir -p /mnt
