@@ -16,7 +16,7 @@
 #   done
 #   sudo bootstrap.sh
 #
-if [[ ! -d "/var/cache/pbuilder/precise-amd64-base.cow" ]]; then
+if [[ ! -d "/mnt/pbuilder/precise-amd64-base.cow" ]]; then
   sudo mkdir -p /mnt/pbuilder
   DIST=precise ARCH=amd64 /usr/sbin/cowbuilder --create --configfile cowbuilderrc
   DIST=precise ARCH=amd64 /usr/sbin/cowbuilder --execute --save-after-exec --configfile cowbuilderrc -- ./finish.sh
