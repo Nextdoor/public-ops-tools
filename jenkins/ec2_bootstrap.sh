@@ -42,6 +42,15 @@ set -e
 # seems seems to help.
 sleep 3
 
+# Discover what version of the OS we're running and set a few variables based
+# on that.
+source /etc/lsb-release
+if [[ "$DISTRIB_CODENAME" -eq "trusty" ]]; then
+  RUBYGEM=rubygems-integration
+else
+  RUBYGEM=rubygems
+fi
+
 # Quiet down the APT command
 export DEBIAN_FRONTEND=noninteractive
 
@@ -63,7 +72,7 @@ DEFAULT_PACKAGES=" \
 # (http://stackoverflow.com/questions/9056008/installed-ruby-1-9-3-
 #  with-rvm-but-command-line-doesnt-show-ruby-v/9056395#9056395)
 #
-RUBY_PACKAGES="ruby rubygems libgdbm-dev bison libffi-dev zlib1g-dev
+RUBY_PACKAGES="ruby $RUBYGEM libgdbm-dev bison libffi-dev zlib1g-dev
                libssl-dev pkg-config"
 
 # Match the "Remote FS root" setting from the Jenkins EC2 Plugin
