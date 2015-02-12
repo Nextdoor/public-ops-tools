@@ -267,6 +267,23 @@ install_ruby() {
   su -l ubuntu -c bash -c "curl -sSL https://get.rvm.io | bash -s stable --ruby"
 }
 
+install_docker() {
+  # Install Docker via the bootstrap script from the Docker team
+  curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+
+  # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
+  # root volume). Also ensure that the docker socket file is owned by the
+  # 'jenkins' group, allowing Jenkins to interact with it.
+  cat << EOF >>  /etc/default/docker
+TMPDIR=/mnt/tmp
+DOCKER_OPTS="-g /mnt/docker -G ubuntu"
+EOF
+  mkdir -p /mnt/tmp /mnt/docker
+
+  # Lastly, restart it now that we've reconfigured it.
+  service docker restart
+}
+
 function main() {
   initial_system_setup
   raid_ephemeral_storage
@@ -274,6 +291,7 @@ function main() {
   create_apt_sources
   install_packages
   install_ruby
+  install_docker
 }
 
 main $*
