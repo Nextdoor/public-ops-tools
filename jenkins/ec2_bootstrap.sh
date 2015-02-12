@@ -181,6 +181,10 @@ raid_ephemeral_storage() {
   # ephemeral0 is typically mounted for us already. umount it here
   umount /mnt
 
+  # For the next few lines, ignore exit codes. They sometimes exit with >0 exit
+  # codes even though things are fine.
+  set +e
+
   # overwrite first few blocks in case there is a filesystem, otherwise mdadm will prompt for input
   for drive in $drives; do
     dd if=/dev/zero of=$drive bs=4096 count=1024
@@ -191,6 +195,11 @@ raid_ephemeral_storage() {
   echo DEVICE $drives | tee /etc/mdadm.conf
   mdadm --detail --scan | tee -a /etc/mdadm.conf
   blockdev --setra 65536 /dev/md0
+
+  # At this point, re-enable exiting on error codes
+  set -e
+
+  # Format and mount
   mkfs -t ext3 /dev/md0
   mount -t ext3 -o noatime /dev/md0 /mnt
 
