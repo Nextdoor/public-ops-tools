@@ -64,6 +64,7 @@ DEBIAN_BUILD_PACKAGES=" \
 
 DEFAULT_PACKAGES=" \
   ${DEBIAN_BUILD_PACKAGES}
+  default_jre \
   git \
   swig"
 
