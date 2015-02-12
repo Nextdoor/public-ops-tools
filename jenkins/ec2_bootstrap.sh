@@ -267,6 +267,28 @@ install_ruby() {
   su -l ubuntu -c bash -c "curl -sSL https://get.rvm.io | bash -s stable --ruby"
 }
 
+install_docker() {
+  # Install Docker via the bootstrap script from the Docker team
+  curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+  cat << EOF >>  /etc/default/docker
+TMPDIR=/mnt/tmp
+DOCKER_OPTS="-g /mnt/docker"
+EOF
+  mkdir -p /mnt/tmp /mnt/docker
+  service docker restart
+
+  # The 'right' thing to do here is to add the ubuntu user to the docker group,
+  # so that Jenkins builds can talk to the Docker daemon. Unfortunately,
+  # because 'group membership' is not reloaded until a user completely logs out
+  # and then logs back in, we cannot do this. It would require telling the
+  # Jenkins EC2 Provisioner Plugin to log out, and then re-log-in to the host.
+  # Instead, since these are dev hosts anyways, we're just going to change the
+  # socket owner and move on.
+  #
+  # Doubly annoying .. this has to happen AFTER docker has started up.
+  sudo chgrp ubuntu  /var/run/docker.sock
+}
+
 function main() {
   initial_system_setup
   raid_ephemeral_storage
@@ -274,6 +296,7 @@ function main() {
   create_apt_sources
   install_packages
   install_ruby
+  install_docker
 }
 
 main $*
