@@ -267,6 +267,17 @@ install_ruby() {
   su -l ubuntu -c bash -c "curl -sSL https://get.rvm.io | bash -s stable --ruby"
 }
 
+install_docker() {
+  curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+  cat << EOF >>  /etc/default/docker
+TMPDIR=/mnt/tmp
+DOCKER_OPTS="-g /mnt/docker"
+EOF
+  usermod -a -G  docker ubuntu
+  mkdir -p /mnt/tmp /mnt/docker
+  service docker restart
+}
+
 function main() {
   initial_system_setup
   raid_ephemeral_storage
@@ -274,6 +285,7 @@ function main() {
   create_apt_sources
   install_packages
   install_ruby
+  install_docker
 }
 
 main $*
