@@ -260,8 +260,12 @@ install_ruby() {
   su -l ubuntu -c bash -c "gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3"
 
   # Set up Ruby, but explicitly uninstall RVM. This lets Jenkins handle the install
-  # of RVM.
+  # of RVM. Note, if the package doesn't exist, we don't care if the uninstall fails.
+  set +e
   apt-get --purge -y --force-yes remove ruby-rvm
+  set -e
+
+  # Install some ruby packages
   apt-get -y --force-yes -q install $RUBY_PACKAGES
 
   # Su back to the Ubuntu user and install RVM under it
