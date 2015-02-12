@@ -137,7 +137,7 @@ raid_ephemeral_storage() {
   grep 'md0' /etc/mtab > /dev/null && return
 
   # Ensure mdadm is installed
-  apt-get -y --force-yes -q install mdadm
+  apt-get -y --force-yes -q install mdadm xfsprogs
 
   # Configure Raid - take into account xvdb or sdb
   root_drive=`df -h | grep -v grep | awk 'NR==2{print $1}'`
@@ -201,8 +201,8 @@ raid_ephemeral_storage() {
   set -e
 
   # Format and mount
-  mkfs -t ext3 /dev/md0
-  mount -t ext3 -o noatime /dev/md0 /mnt
+  mkfs -t xfs /dev/md0
+  mount -t xfs -o noatime /dev/md0 /mnt
 
   # Remove xvdb/sdb from fstab
   chmod 777 /etc/fstab
