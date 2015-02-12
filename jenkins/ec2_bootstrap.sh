@@ -45,7 +45,7 @@ sleep 3
 # Discover what version of the OS we're running and set a few variables based
 # on that.
 source /etc/lsb-release
-if [[ "$DISTRIB_CODENAME" -eq "trusty" ]]; then
+if [[ "$DISTRIB_CODENAME" == "trusty" ]]; then
   RUBYGEM=rubygems-integration
 else
   RUBYGEM=rubygems
