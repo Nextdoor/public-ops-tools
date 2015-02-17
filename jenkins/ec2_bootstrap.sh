@@ -281,6 +281,13 @@ install_docker() {
   set +e
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
 
+  # Enable the much more tested and reliable filesystem driver AUFS
+  # https://groups.google.com/forum/#!topic/docker-user/Tpi5m1I9dGU
+  #
+  # (Note: Our Puppet module already does this, so this is
+  # just mimicking production)
+  apt-get install linux-image-extra-$(uname -r)
+
   # Install docker
   apt-get update
   apt-get install -y lxc-docker-1.4.1
