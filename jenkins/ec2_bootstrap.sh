@@ -124,6 +124,7 @@ initial_system_setup() {
 Host *
         StrictHostKeyChecking no
 EOF
+  chown ubuntu.ubuntu ~ubuntu/.ssh/config
 
   # Install our nextdoor GPG key
   echo "$NEXTDOOR_APT_KEY" | apt-key add -
