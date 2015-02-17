@@ -286,7 +286,7 @@ install_docker() {
   #
   # (Note: Our Puppet module already does this, so this is
   # just mimicking production)
-  apt-get install linux-image-extra-$(uname -r)
+  apt-get install -y linux-image-extra-$(uname -r)
 
   # Install docker
   apt-get update
