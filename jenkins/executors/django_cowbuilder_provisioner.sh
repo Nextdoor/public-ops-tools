@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 # Create a Jenkins slave to build, test, and deploy Django apps on ubuntu 12.04.
 #
 # Call the script like this:
@@ -14,11 +14,13 @@ deb https://s3.amazonaws.com/cloud.nextdoor.com/repos/precise stable main\n
 deb https://s3.amazonaws.com/cloud.nextdoor.com/repos/precise unstable main\n"
 
 # apt-transport-s3 accessed repos
+set +x
 export S3_REPOS="
 deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/precise/ stable/\n
 deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/precise/ unstable/\n
 deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/melissadata/ stable/\n
 deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/melissadata/ unstable/\n"
+set -x
 
 # Our Boot Script
 BOOTSCRIPT="${GITHUB}/jenkins/ec2_bootstrap.sh"
@@ -28,12 +30,14 @@ curl -q --insecure $BOOTSCRIPT | sudo -E /bin/bash
 
 # Enable login to the slave.
 mkdir -m 755 -p ~/.ssh
+set +x
 echo "$AUTHORIZED_KEYS" >> ~/.ssh/authorized_keys
+set -x
 chmod 600 ~/.ssh/authorized_keys
 
 # Move /tmp and /var/cache to the big partition.
 sudo mkdir -p /mnt
-for DIR in /tmp /var/cache; do
+for DIR in /tmp; do
     [[ ! -d $DIR ]] && exit 1
     DEST=/mnt$(dirname $DIR)
     BASEDIR=$(basename $DIR)
@@ -58,7 +62,7 @@ FILES="bootstrap.sh cowbuilderrc finish.sh"
 for file in $FILES; do
   curl --silent --insecure -O ${BASE}/${file}
 done
-time sudo /bin/bash -x bootstrap.sh
+sudo /bin/bash bootstrap.sh
 
 # Use the '-y' flag with apt-get (for non-interactive installs)
 [[ ! -f /etc/apt/apt.conf.d/30apt_assume_yes.conf ]] &&
