@@ -30,12 +30,11 @@
 # Matt Wise <matt@nextdoor.com>
 #
 
-# Ensure that on any failure, we exit, but also make sure that the contents
-# of this script are not outputted to the console. This script writes out
-# some credentials (that it gets from an environment variable) and we do
-# not want this outputted to logs.
-set +x
+# Exit on any failure.
 set -e
+
+# Be verbose. Wherever we'd print sensitive data, go silent.
+set +x
 
 # Sleep for 3 seconds.. seems that there may be some background things going on
 # when the node first boots up that prevents the apt-installs below to work. Waiting
@@ -51,7 +50,7 @@ else
   RUBYGEM=rubygems
 fi
 
-# Quiet down the APT command
+# Enable unattended use of apt-get.
 export DEBIAN_FRONTEND=noninteractive
 
 # Default list of packages that are installed via APT. These are required to
@@ -65,8 +64,7 @@ DEBIAN_BUILD_PACKAGES=" \
 DEFAULT_PACKAGES=" \
   ${DEBIAN_BUILD_PACKAGES}
   default-jre \
-  git \
-  swig"
+  git"
 
 # Ruby and all the Ruby dependencies (RVM is manually installed later
 # automatically by the RVM Jenkins Plugin)
@@ -134,14 +132,14 @@ EOF
 }
 
 raid_ephemeral_storage() {
-  # If the volume is already setup as a md0 raid, skip this func
-  grep 'md0' /etc/mtab > /dev/null && return
+  # If the volume is already set up as an md0 raid, skip this func
+  grep -q md0 /etc/mtab && return
 
-  # Ensure mdadm is installed
+  # Make surethat mdadm is installed
   apt-get -y --force-yes -q install mdadm xfsprogs
 
   # Configure Raid - take into account xvdb or sdb
-  root_drive=`df -h | grep -v grep | awk 'NR==2{print $1}'`
+  root_drive=`df | awk '$NF=="/" {print $1}'`
 
   if [ "$root_drive" == "/dev/xvda1" ]; then
     echo "Detected 'xvd' drive naming scheme (root: $root_drive)"
@@ -183,23 +181,17 @@ raid_ephemeral_storage() {
   # ephemeral0 is typically mounted for us already. umount it here
   umount /mnt
 
-  # For the next few lines, ignore exit codes. They sometimes exit with >0 exit
-  # codes even though things are fine.
-  set +e
-
   # overwrite first few blocks in case there is a filesystem, otherwise mdadm will prompt for input
   for drive in $drives; do
     dd if=/dev/zero of=$drive bs=4096 count=1024
   done
 
   partprobe
-  mdadm --create --verbose /dev/md0 --level=0 -c256 --raid-devices=$ephemeral_count $drives
+  mdadm --create --verbose /dev/md0 --level=0 -c256 --raid-devices=$ephemeral_count $drives ||
+    true
   echo DEVICE $drives | tee /etc/mdadm.conf
-  mdadm --detail --scan | tee -a /etc/mdadm.conf
+  { mdadm --detail --scan || true; } | tee -a /etc/mdadm.conf
   blockdev --setra 65536 /dev/md0
-
-  # At this point, re-enable exiting on error codes
-  set -e
 
   # Format and mount
   mkfs -t xfs /dev/md0
@@ -224,12 +216,15 @@ create_apt_sources() {
     apt-get -y -q update
   fi
 
-  # Install the apt-transport-s3 driver if its missing
-  dpkg --status apt-transport-s3 > /dev/null || apt-get -y --force-yes -q install apt-transport-s3
+  # Install the apt-transport-s3 driver if it iss missing
+  dpkg --status apt-transport-s3 > /dev/null ||
+      apt-get -y --force-yes -q install apt-transport-s3
 
   # Now, install the apt-transport-s3 backed repos
   if [[ ! -f '/etc/apt/sources.list.d/s3.sources.list' ]]; then
+    set +x
     echo -e "${S3_REPOS}" > /etc/apt/sources.list.d/s3.sources.list
+    set -x
     apt-get -y -q update
   fi
 
