@@ -179,7 +179,7 @@ raid_ephemeral_storage() {
   fi
 
   # ephemeral0 is typically mounted for us already. umount it here
-  umount /mnt
+  umount /mnt || true
 
   # overwrite first few blocks in case there is a filesystem, otherwise mdadm will prompt for input
   for drive in $drives; do
