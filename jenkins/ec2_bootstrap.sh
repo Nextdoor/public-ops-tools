@@ -186,7 +186,7 @@ raid_ephemeral_storage() {
     dd if=/dev/zero of=$drive bs=4096 count=1024
   done
 
-  partprobe
+  partprobe || true
   mdadm --create --verbose /dev/md0 --level=0 -c256 --raid-devices=$ephemeral_count $drives ||
     true
   echo DEVICE $drives | tee /etc/mdadm.conf
