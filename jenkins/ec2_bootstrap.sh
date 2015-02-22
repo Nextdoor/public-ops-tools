@@ -148,7 +148,7 @@ raid_ephemeral_storage() {
     if [ -b $device_path ]; then
       echo "Detected ephemeral disk: $device_path"
       drives="$drives $device_path"
-      ((ephemeral_count ++))
+      ((ephemeral_count ++)) || true
     else
       echo "Ephemeral disk $e, $device_path is not present. skipping"
     fi
