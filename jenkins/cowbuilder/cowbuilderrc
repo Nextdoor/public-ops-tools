@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------
 
 # Mirrors to use. Update these to your preferred mirror.
-UBUNTU_MIRROR="mirrors.kernel.org"
+UBUNTU_MIRROR="us-west-2.ec2.archive.ubuntu.com"
 
 # Optionally set a default distribution if none is used. Note that you can set
 # your own default (i.e. ${DIST:="unstable"}).
