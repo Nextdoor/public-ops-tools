@@ -314,14 +314,14 @@ install_docker() {
 
   # Install docker
   apt-get update
-  install_packages lxc-docker-1.4.1
+  install_packages lxc-docker-1.5.0
 
   # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
   # root volume). Also ensure that the docker socket file is owned by the
   # 'jenkins' group, allowing Jenkins to interact with it.
   cat << EOF >>  /etc/default/docker
 TMPDIR=/mnt/tmp
-DOCKER_OPTS="-g /mnt/docker -G ubuntu"
+DOCKER_OPTS="-g /mnt/docker -G ubuntu --storage-opt dm.basesize=20G"
 EOF
   mkdir -p /mnt/tmp /mnt/docker
   set -e
