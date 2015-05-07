@@ -35,7 +35,8 @@ export DEBIAN_FRONTEND=noninteractive
 # that are needed to fulfill a particular host type's role should
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
-  default-jre
+  java7-jdk
+  java7-runtime
   git"
 
 # Tools for building .deb archives.
