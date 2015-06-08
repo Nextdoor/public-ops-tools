@@ -35,8 +35,7 @@ export DEBIAN_FRONTEND=noninteractive
 # that are needed to fulfill a particular host type's role should
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
-  java7-jdk
-  java7-runtime
+  openjdk-7-jdk
   git"
 
 # Tools for building .deb archives.
@@ -81,9 +80,6 @@ EOF
 
 # Set up a couple of misc system settings...
 initial_system_setup() {
-  # Don't use the EC2 Apt mirrors since they go down more regularly than Ubuntu's
-  sed -i -e 's/us-east-1\.ec2\.//g' /etc/apt/sources.list
-
   # Ensure that we can do git clones without strict host key checking
   cat <<EOF >> ~ubuntu/.ssh/config
 Host *
