@@ -313,7 +313,7 @@ install_docker() {
 
   # Install docker
   apt-get update
-  install_packages lxc-docker-1.5.0
+  install_packages lxc-docker-1.7.1
 
   # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
   # root volume). Also ensure that the docker socket file is owned by the
