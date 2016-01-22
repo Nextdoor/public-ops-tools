@@ -175,6 +175,15 @@ prep_for_jenkins() {
   # Run Jenkins on the faster RAID storage
   JENKINS_HOME="/mnt/jenkins"  # Match the "Remote FS root" setting from the Jenkins EC2 Plugin
   mkdir -p $JENKINS_HOME && chown ubuntu:ubuntu $JENKINS_HOME
+
+  # Tell well-behaved programs to put their output on the big drive
+  TMPDIR=/mnt/tmp
+  mkdir -p $TMPDIR
+  chmod 1777 $TMPDIR
+  cat >> /etc/profile << EOF
+TMPDIR=$TMPDIR
+export TMPDIR
+EOF
 }
 
 restart_raid_ephemeral_storage() {
@@ -313,7 +322,7 @@ install_docker() {
 
   # Install docker
   apt-get update
-  install_packages lxc-docker-1.7.1
+  install_packages lxc-docker-1.9.1
 
   # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
   # root volume). Also ensure that the docker socket file is owned by the
@@ -322,7 +331,7 @@ install_docker() {
 TMPDIR=/mnt/tmp
 DOCKER_OPTS="-g /mnt/docker -G ubuntu --storage-opt dm.basesize=20G"
 EOF
-  mkdir -p /mnt/tmp /mnt/docker
+  mkdir -p /mnt/docker
   set -e
 
   # Lastly, restart it now that we've reconfigured it.
