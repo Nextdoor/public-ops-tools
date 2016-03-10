@@ -13,8 +13,7 @@
 #
 #   #!/bin/bash
 #
-#   export AWS_ACCESS_KEY_ID=<access_key>
-#   export AWS_SECRET_ACCESS_KEY=<secret_id>
+#   export PACKAGECLOUD_APT_TOKEN=<token>
 #
 #   GITHUB="https://raw.githubusercontent.com/Nextdoor/public-ops-tools/master/"
 #   BOOTSCRIPT="${GITHUB}/jenkins/ec2_bootstrap.sh"
@@ -30,6 +29,17 @@ source /etc/lsb-release
 
 # Enable unattended use of apt-get.
 export DEBIAN_FRONTEND=noninteractive
+
+APT_SOURCES_DIR=/etc/apt/sources.list.d
+
+update-repo() {
+    for source in "$@"; do
+        sudo apt-get update -qq \
+            -o Dir::Etc::sourcelist="sources.list.d/${source}" \
+            -o Dir::Etc::sourceparts="-" \
+            -o APT::Get::List-Cleanup="0"
+    done
+}
 
 # Packages that are installed on every worker host. Other packages
 # that are needed to fulfill a particular host type's role should
@@ -221,48 +231,41 @@ APT {
 EOF
     fi
 
-    if [[ ! -f '/etc/apt/sources.list.d/https.sources.list' ]]; then
+    local HTTPS_SOURCES_LIST=https.sources.list
+    if [[ ! -f $APT_SOURCES_DIR/$HTTPS_SOURCES_LIST ]]; then
         # Install the Nextdoor public repos
-        cat > /etc/apt/sources.list.d/https.sources.list << EOF
+        cat > $APT_SOURCES_DIR/$HTTPS_SOURCES_LIST << EOF
 deb https://s3.amazonaws.com/cloud.nextdoor.com/repos/precise stable main
 deb https://s3.amazonaws.com/cloud.nextdoor.com/repos/precise unstable main
 EOF
-        apt-get -y -q update
+        update-repo $HTTPS_SOURCES_LIST
     fi
 
     # Install the apt-transport-s3 driver if it is missing
     dpkg --status apt-transport-s3 > /dev/null || install_packages apt-transport-s3
 
-    # Now, install the apt-transport-s3 backed repos
-    if [[ ! -f '/etc/apt/sources.list.d/s3.sources.list' ]]; then
-        set +x
-        cat > /etc/apt/sources.list.d/s3.sources.list << EOF
-deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/precise/ stable/
-deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/precise/ unstable/
-deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/melissadata/ stable/
-deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/melissadata/ unstable/
-deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/apps stable/
-deb s3://${AWS_ACCESS_KEY_ID}:[${AWS_SECRET_ACCESS_KEY}]@s3.amazonaws.com/cloud.nextdoor.com/debian_repos/apps unstable/
+    # Configure for the Nextdoor apt repo
+    cat > $APT_SOURCES_DIR/packagecloud.list << EOF
+deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-prod-repos.corp.nextdoor.com/nextdoor/prod/any/ any main
+deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-prod-repos.corp.nextdoor.com/nextdoor/prod/ubuntu/ precise main
+deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-staging-repos.corp.nextdoor.com/nextdoor/staging/any/ any main
+deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-staging-repos.corp.nextdoor.com/nextdoor/staging/ubuntu/ precise main
 EOF
-        set -x
-        apt-get -y -q update
-    fi
+    #update-repo packagecloud.list
 
     # Configure apt pinning
-    cat > /etc/apt/preferences.d/stable.pref <<EOF
-# stable
-Explanation: : stable
+    cat > /etc/apt/preferences.d/packagecloud-prod.pref <<EOF
+Explanation: repos: packagecloud-prod
 Package: *
-Pin: release n=stable
-Pin-Priority: 1100
+Pin: origin packagecloud-prod-repos.corp.nextdoor.com
+Pin-Priority: 1002
 EOF
 
-    cat > /etc/apt/preferences.d/unstable.pref <<EOF
-# unstable
-Explanation: : unstable
+    cat > /etc/apt/preferences.d/packagecloud-staging.pref <<EOF
+Explanation: repos: packagecloud-staging
 Package: *
-Pin: origin "s3.amazonaws.com"
-Pin-Priority: 1001
+Pin: origin packagecloud-staging-repos.corp.nextdoor.com
+Pin-Priority: 1000
 EOF
 }
 
@@ -321,7 +324,7 @@ install_docker() {
   install_packages linux-image-extra-$(uname -r)
 
   # Install docker
-  apt-get update
+  update-repo docker.list
   install_packages lxc-docker-1.9.1
 
   # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
