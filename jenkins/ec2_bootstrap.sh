@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 # = About
 #
@@ -423,6 +423,44 @@ prepare_cowbuilder() {
     /bin/bash ./bootstrap.sh
 }
 
+install_datadog_agent() {
+    # Install the Datadog agent. The agent requires an API key which is expected
+    # to be present in the shell environment as DATADOG_AGENT_API_KEY. If the
+    # value is not present then inform stdout but do not fail the run.
+    if [[ -z "${DATADOG_AGENT_API_KEY}" ]]; then
+	echo "Optional envvar DATADOG_AGENT_API_KEY does not exist."
+    else
+	# PC1 == Puppet Collection 1 == most stable for this platform
+	PUPPET_REPO_URI='https://apt.puppetlabs.com/puppetlabs-release-pc1-precise.deb'
+	(cd /tmp &&
+	  wget --no-check-certificate "${PUPPET_REPO_URI}" &&
+	  dpkg -i puppetlabs*.deb)
+
+	set -e
+	
+	update-repo puppetlabs-pc1.list
+	apt-get install -y puppet-agent
+	PATH=/opt/puppetlabs/puppet/bin:$PATH
+	puppet module install datadog/datadog_agent
+	puppet apply --verbose -e "
+
+class { '::datadog_agent': 
+  api_key => '${DATADOG_AGENT_API_KEY}',
+  tags => ['devtools_group:ci', 'devtools_ci:jenkins'],
+} ->
+
+class { '::datadog_agent::integrations::jenkins':
+  path => '${JENKINS_HOME}',
+}
+
+service { 'puppet':
+  ensure => stopped,
+  enable => false,
+}
+"
+    fi
+}
+
 function main() {
     # Exit on any failure.
     set -e
@@ -456,6 +494,7 @@ function main() {
     install_packages $DEBIAN_BUILD_PACKAGES
     install_ruby
     install_docker
+    install_datadog_agent
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
 }
 
