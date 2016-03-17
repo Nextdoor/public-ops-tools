@@ -45,8 +45,9 @@ update-repo() {
 # that are needed to fulfill a particular host type's role should
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
+  git
   openjdk-7-jdk
-  git"
+  zip"
 
 # Tools for building .deb archives.
 DEBIAN_BUILD_PACKAGES="
