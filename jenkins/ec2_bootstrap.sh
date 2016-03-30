@@ -381,11 +381,11 @@ install_ruby() {
 
 install_docker() {
   # Add the repository to your APT sources
-  echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list
+  echo deb https://apt.dockerproject.org/repo ubuntu-precise main > /etc/apt/sources.list.d/docker.list
 
   # Then import the repository key
   set +e
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
+  apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
 
   # Enable the much more tested and reliable filesystem driver AUFS
   # https://groups.google.com/forum/#!topic/docker-user/Tpi5m1I9dGU
@@ -396,7 +396,8 @@ install_docker() {
 
   # Install docker
   update-repo docker.list
-  install_packages lxc-docker-1.9.1
+  apt-get purge lxc-docker
+  install_packages docker-engine
 
   # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
   # root volume). Also ensure that the docker socket file is owned by the
