@@ -345,6 +345,11 @@ install_packages() {
   apt-get -y --force-yes -q install $*
 }
 
+update_git() {
+  # Upgrade the verison of git.
+  apt-get install -y --force-yes --upgrade git
+}
+
 install_ruby() {
   # Install gpg key for rvm
   su -l ubuntu -c bash -c "gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3"
@@ -497,6 +502,7 @@ function main() {
     install_ruby
     install_docker
     install_datadog_agent
+    update_git
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
 }
 
