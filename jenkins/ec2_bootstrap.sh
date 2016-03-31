@@ -338,16 +338,13 @@ Package: *
 Pin: origin packagecloud-staging-repos.corp.nextdoor.com
 Pin-Priority: 1000
 EOF
+    apt-add-repository ppa:git-core/ppa
+    apt-get update
 }
 
 install_packages() {
   # Install a list of Debian packages
   apt-get -y --force-yes -q install $*
-}
-
-update_git() {
-  # Upgrade the verison of git.
-  apt-get install -y --force-yes --upgrade git
 }
 
 install_ruby() {
@@ -502,7 +499,6 @@ function main() {
     install_ruby
     install_docker
     install_datadog_agent
-    update_git
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
 }
 
