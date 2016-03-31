@@ -338,6 +338,8 @@ Package: *
 Pin: origin packagecloud-staging-repos.corp.nextdoor.com
 Pin-Priority: 1000
 EOF
+    apt-add-repository ppa:git-core/ppa
+    apt-get update
 }
 
 install_packages() {
