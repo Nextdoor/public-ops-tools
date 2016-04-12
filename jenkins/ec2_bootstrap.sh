@@ -392,6 +392,25 @@ install_npm_proxy_cache() {
   forever-service install --start --script /usr/bin/sinopia -f ' --workingDir /mnt/' sinopia
 }
 
+# Install & run Devpi pip proxy cache via Docker
+install_pip_proxy_cache() {
+  # persist cache in /mnt/devpi on the host
+  mkdir -p /mnt/devpi
+  docker pull scrapinghub/devpi
+  docker run -d --name devpi -v /mnt/devpi:/mnt -p 3141:3141 scrapinghub/devpi
+}
+
+# Use nodesource repos to install NodeJS & sinopia.
+install_npm_proxy_cache() {
+  # Ugh - but this is the way we install Node elsewhere.
+  curl -sL https://deb.nodesource.com/setup_4.x | bash -
+  apt-get install -y nodejs
+  # Install sinopia globally and set up a boot-time service
+  npm install -g forever forever-service sinopia
+  mkdir -p /mnt/sinopia
+  forever-service install --start --script /usr/bin/sinopia -f ' --workingDir /mnt/' sinopia
+}
+
 install_docker() {
   # Add the repository to your APT sources
   echo deb https://apt.dockerproject.org/repo ubuntu-precise main > /etc/apt/sources.list.d/docker.list
@@ -511,6 +530,7 @@ function main() {
     install_docker
     install_datadog_agent
     install_npm_proxy_cache
+    install_pip_proxy_cache
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
 }
 
