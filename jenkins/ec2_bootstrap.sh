@@ -417,11 +417,14 @@ install_docker() {
   # 'jenkins' group, allowing Jenkins to interact with it.
   cat << EOF >>  /etc/default/docker
 TMPDIR=/mnt/tmp
+DOCKER_TMPDIR=/mnt/tmp
 DOCKER_OPTS="-g /mnt/docker -G ubuntu --storage-opt dm.basesize=20G"
 EOF
   mkdir -p /mnt/docker
   set -e
-
+  # See https://github.com/opencontainers/runc/issues/726
+  echo 10240000000 > /proc/sys/kernel/keys/root_maxbytes
+  echo 1024000 > /proc/sys/kernel/keys/root_maxkeys
   # Lastly, restart it now that we've reconfigured it.
   service docker restart
 }
