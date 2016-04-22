@@ -425,6 +425,8 @@ EOF
   # See https://github.com/opencontainers/runc/issues/726
   echo 10240000000 > /proc/sys/kernel/keys/root_maxbytes
   echo 1024000 > /proc/sys/kernel/keys/root_maxkeys
+  echo 1024000 > /proc/sys/kernel/keys/maxkeys
+  echo 1024000 > /proc/sys/kernel/keys/maxbytes
   # Lastly, restart it now that we've reconfigured it.
   service docker restart
 }
