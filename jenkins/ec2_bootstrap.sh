@@ -467,10 +467,6 @@ class { '::datadog_agent':
   tags => ['devtools_group:ci', 'devtools_ci:jenkins'],
 } ->
 
-class { '::datadog_agent::integrations::jenkins':
-  path => '${JENKINS_HOME}',
-}
-
 service { 'puppet':
   ensure => stopped,
   enable => false,
