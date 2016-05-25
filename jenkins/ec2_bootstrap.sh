@@ -317,10 +317,10 @@ EOF
 
     # Configure for the Nextdoor apt repo
     cat > $APT_SOURCES_DIR/packagecloud.list << EOF
-deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/any/ any main 
-deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/ubuntu/ precise main 
-deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/any/ any main 
-deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/ubuntu/ precise main 
+deb https://${PROD_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/any/ any main 
+deb https://${PROD_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/ubuntu/ precise main 
+deb https://${ENG_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/any/ any main 
+deb https://${ENG_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/ubuntu/ precise main 
 EOF
     update-repo packagecloud.list
 
