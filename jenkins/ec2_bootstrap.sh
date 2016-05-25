@@ -317,26 +317,19 @@ EOF
 
     # Configure for the Nextdoor apt repo
     cat > $APT_SOURCES_DIR/packagecloud.list << EOF
-deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-prod-repos.corp.nextdoor.com/nextdoor/prod/any/ any main
-deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-prod-repos.corp.nextdoor.com/nextdoor/prod/ubuntu/ precise main
-deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-staging-repos.corp.nextdoor.com/nextdoor/staging/any/ any main
-deb https://repos:$PACKAGECLOUD_APT_TOKEN@packagecloud-staging-repos.corp.nextdoor.com/nextdoor/staging/ubuntu/ precise main
+deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/any/ any main 
+deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/ubuntu/ precise main 
+deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/any/ any main 
+deb https://${PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/ubuntu/ precise main 
 EOF
     update-repo packagecloud.list
 
     # Configure apt pinning
-    cat > /etc/apt/preferences.d/packagecloud-prod.pref <<EOF
-Explanation: repos: packagecloud-prod
+    cat > /etc/apt/preferences.d/packagecloud.pref <<EOF
+Explanation: repos: packagecloud
 Package: *
-Pin: origin packagecloud-prod-repos.corp.nextdoor.com
+Pin: origin packagecloud.io
 Pin-Priority: 1002
-EOF
-
-    cat > /etc/apt/preferences.d/packagecloud-staging.pref <<EOF
-Explanation: repos: packagecloud-staging
-Package: *
-Pin: origin packagecloud-staging-repos.corp.nextdoor.com
-Pin-Priority: 1000
 EOF
     apt-add-repository ppa:git-core/ppa
     apt-get update
