@@ -471,6 +471,14 @@ service { 'puppet':
     fi
 }
 
+install_pip() {
+    apt-get install python-pip python-dev build-essential
+}
+
+install_docker_tools() {
+    pip install docker-compose functools32
+}
+
 function main() {
     # Exit on any failure.
     set -e
@@ -506,6 +514,8 @@ function main() {
     install_docker
     install_datadog_agent
     install_npm_proxy_cache
+    install_pip
+    install_docker_tools
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
 }
 
