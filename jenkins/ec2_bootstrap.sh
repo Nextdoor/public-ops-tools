@@ -476,7 +476,9 @@ install_pip() {
 }
 
 install_docker_tools() {
-    pip install docker-compose functools32
+    pip install functools32
+    curl -L https://github.com/docker/compose/releases/download/1.8.0-rc2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
 }
 
 function main() {
