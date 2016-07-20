@@ -472,13 +472,17 @@ service { 'puppet':
 }
 
 install_pip() {
-    apt-get install python-pip python-dev build-essential
+    apt-get install -y python-pip python-dev build-essential
 }
 
 install_docker_tools() {
     pip install functools32
     curl -L https://github.com/docker/compose/releases/download/1.8.0-rc2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
+}
+
+install_jq() {
+    apt-get install -y jq
 }
 
 function main() {
@@ -518,6 +522,7 @@ function main() {
     install_npm_proxy_cache
     install_pip
     install_docker_tools
+    install_jq
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
 }
 
