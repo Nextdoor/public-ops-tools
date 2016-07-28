@@ -481,10 +481,6 @@ install_docker_tools() {
     chmod +x /usr/local/bin/docker-compose
 }
 
-install_jq() {
-    apt-get install -y jq
-}
-
 function main() {
     # Exit on any failure.
     set -e
@@ -522,7 +518,6 @@ function main() {
     install_npm_proxy_cache
     install_pip
     install_docker_tools
-    install_jq
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
 }
 
