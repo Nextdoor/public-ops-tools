@@ -472,7 +472,7 @@ service { 'puppet':
 }
 
 install_pip() {
-    apt-get install -y python-pip python-dev build-essential
+    apt-get install -y python-pip python-dev build-essential python-virtualenv
 }
 
 install_docker_tools() {
