@@ -519,6 +519,7 @@ function main() {
     install_pip
     install_docker_tools
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
+    sudo service postgresql stop || true
 }
 
 main $*
