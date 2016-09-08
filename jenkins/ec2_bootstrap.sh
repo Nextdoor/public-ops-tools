@@ -422,6 +422,12 @@ EOF
   echo 1024000 > /proc/sys/kernel/keys/maxbytes
   # Lastly, restart it now that we've reconfigured it.
   service docker restart
+  
+  docker run \
+  	-v /var/run/docker.sock:/var/run/docker.sock:rw \
+  	-v /var/lib/docker:/var/lib/docker:rw \
+  	-d \
+  	meltwater/docker-cleanup:latest
 }
 
 prepare_cowbuilder() {
