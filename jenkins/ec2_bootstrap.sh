@@ -429,7 +429,7 @@ EOF
   	-d \
   	meltwater/docker-cleanup:latest
   # Cleanup all nextdoor_app images after 30th every Sunday
-  echo "0 17 * * sun docker images | grep nextdoor_app | tail -n +30 | awk '{ print \$1 }' | xargs docker rmi" | crontab
+  echo "0 17 * * sun docker images -a | grep nextdoor_app | tail -n +30 | awk '{ print \$3 }' | xargs docker rmi" | crontab
 }
 
 prepare_cowbuilder() {
