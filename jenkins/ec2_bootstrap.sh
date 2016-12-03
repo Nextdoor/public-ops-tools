@@ -377,7 +377,7 @@ install_ruby() {
 # Use nodesource repos to install NodeJS & sinopia.
 install_npm_proxy_cache() {
   # Ugh - but this is the way we install Node elsewhere.
-  curl -sL https://deb.nodesource.com/setup_4.x | bash -
+  curl -sL https://deb.nodesource.com/setup_6.x | bash -
   apt-get install -y nodejs
   # Install sinopia globally and set up a boot-time service
   npm install -g forever forever-service sinopia
