@@ -46,8 +46,10 @@ update-repo() {
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
   git
-  openjdk-7-jdk
   zip"
+
+OPENJDK_DEFAULT="openjdk-8-jdk"
+OPENJDK_FAILOVER="openjdk-7-jdk"
 
 # Tools for building .deb archives.
 DEBIAN_BUILD_PACKAGES="
@@ -519,6 +521,7 @@ function main() {
     prep_for_jenkins
     create_apt_sources
     install_packages $DEFAULT_PACKAGES
+    install_packages $OPENJDK_DEFAULT || install_packages $OPENJDK_FAILOVER
     install_packages $DEBIAN_BUILD_PACKAGES
     install_ruby
     install_docker
