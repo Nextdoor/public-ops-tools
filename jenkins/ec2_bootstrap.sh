@@ -405,7 +405,7 @@ install_docker() {
   # Install docker
   update-repo docker.list
   apt-get purge lxc-docker
-  install_packages docker-engine=1.11.2-0~precise
+  install_packages docker-engine  # =1.11.2-0~precise
 
   # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
   # root volume). Also ensure that the docker socket file is owned by the
