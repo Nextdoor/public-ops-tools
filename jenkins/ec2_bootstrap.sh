@@ -425,6 +425,8 @@ EOF
   # Lastly, restart it now that we've reconfigured it.
   service docker restart
   
+  for i in 1 2 3 4 5; do docker ps && break || sleep 5; done
+  
   docker run \
   	-v /var/run/docker.sock:/var/run/docker.sock:rw \
   	-v /var/lib/docker:/var/lib/docker:rw \
