@@ -428,9 +428,11 @@ EOF
   for i in 1 2 3 4 5; do docker ps && break || sleep 5; done
   
   docker run \
+        -e KEEP_IMAGES="hub.corp.nextdoor.com/dev-tools/nextdoor_db_9_4 hub.corp.nextdoor.com/dev-tools/atlas hub.corp.nextdoor.com/dev-tools/jenkins-nextdoor-unit-tests"
   	-v /var/run/docker.sock:/var/run/docker.sock:rw \
   	-v /var/lib/docker:/var/lib/docker:rw \
   	-d \
+	--restart="unless-stopped" \
   	meltwater/docker-cleanup:latest
   # Cleanup all nextdoor_app images after 30th every Sunday
   echo "0 17 * * sun docker images -a | grep nextdoor_app | tail -n +30 | awk '{ print \$3 }' | xargs docker rmi" | crontab
