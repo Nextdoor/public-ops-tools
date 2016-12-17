@@ -494,7 +494,7 @@ install_pip() {
 install_phab_utils() {
     mkdir -p /var/jenkins
     git clone https://github.com/Nextdoor/arcanist.git /var/jenkins/arcanist
-    git clone https://github.com:phacility/libphutil.git /var/jenkins/libphutil
+    git clone https://github.com/phacility/libphutil.git /var/jenkins/libphutil
 }
 
 install_docker_tools() {
