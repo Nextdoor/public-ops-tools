@@ -45,6 +45,8 @@ update-repo() {
 # that are needed to fulfill a particular host type's role should
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
+  php5
+  php5-curl
   git
   zip"
 
@@ -489,6 +491,12 @@ install_pip() {
     apt-get install -y python-pip python-dev build-essential python-virtualenv
 }
 
+install_phab_utils() {
+    mkdir -p /var/jenkins
+    git clone https://github.com/Nextdoor/arcanist.git /var/jenkins/arcanist
+    git clone https://github.com:phacility/libphutil.git /var/jenkins/libphutil
+}
+
 install_docker_tools() {
     pip install functools32
     curl -L https://github.com/docker/compose/releases/download/1.8.0-rc2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
@@ -533,6 +541,7 @@ function main() {
     install_npm_proxy_cache
     install_pip
     install_docker_tools
+    install_phab_utils
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
     sudo service postgresql stop || true
 }
