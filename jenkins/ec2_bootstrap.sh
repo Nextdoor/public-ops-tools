@@ -531,7 +531,7 @@ function main() {
     initial_system_setup
     raid_ephemeral_storage
     prep_for_jenkins
-    create_apt_sources
+    #create_apt_sources
     install_packages $DEFAULT_PACKAGES
     install_packages $OPENJDK_DEFAULT || install_packages $OPENJDK_FAILOVER
     install_packages $DEBIAN_BUILD_PACKAGES
