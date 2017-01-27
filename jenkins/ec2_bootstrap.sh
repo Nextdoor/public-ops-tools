@@ -170,6 +170,10 @@ Host *
         StrictHostKeyChecking no
 EOF
   chown ubuntu.ubuntu ~ubuntu/.ssh/config
+  apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 40976EAF437D05B5
+  apt-key adv --recv-keys --keyserver keyserver.ubuntu.com BAD55AD940BBB133
+  install_nextdoor_gpg_key
+  install_packagecloud_gpg_key
   # Do an Apt-Get update so that later package installs can succeed
   apt-get -y -q update
 }
@@ -527,7 +531,7 @@ function main() {
     initial_system_setup
     raid_ephemeral_storage
     prep_for_jenkins
-    #create_apt_sources
+    create_apt_sources
     install_packages $DEFAULT_PACKAGES
     install_packages $OPENJDK_DEFAULT || install_packages $OPENJDK_FAILOVER
     install_packages $DEBIAN_BUILD_PACKAGES
