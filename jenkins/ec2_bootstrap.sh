@@ -171,8 +171,8 @@ Host *
 EOF
   chown ubuntu.ubuntu ~ubuntu/.ssh/config
 
-  install_nextdoor_gpg_key
-  install_packagecloud_gpg_key
+  #install_nextdoor_gpg_key
+  #install_packagecloud_gpg_key
 
   # Do an Apt-Get update so that later package installs can succeed
   apt-get -y -q update
