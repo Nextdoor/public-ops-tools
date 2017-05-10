@@ -48,6 +48,7 @@ DEFAULT_PACKAGES="
   php5
   php5-curl
   git
+  parallel
   zip"
 
 OPENJDK_DEFAULT="openjdk-8-jdk"
