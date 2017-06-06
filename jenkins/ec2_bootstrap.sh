@@ -480,6 +480,7 @@ install_datadog_agent() {
 
 class { '::datadog_agent': 
   api_key => '${DATADOG_AGENT_API_KEY}',
+  bind_host => '0.0.0.0',
   log_level => 'error',
   tags => ['devtools_group:ci', 'devtools_ci:jenkins'],
 } ->
