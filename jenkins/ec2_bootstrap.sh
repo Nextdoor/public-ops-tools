@@ -377,7 +377,7 @@ install_ruby() {
   install_packages $RUBY_PACKAGES
 
   # Su back to the Ubuntu user and install RVM under it
-  su -l ubuntu -c bash -c "curl -sSL https://get.rvm.io | bash -s stable --ruby"
+  su -l ubuntu -c bash -c "curl -sSL https://raw.githubusercontent.com/wayneeseguin/rvm/stable/binscripts/rvm-installer | bash -s stable --ruby"
 }
 
 # Use nodesource repos to install NodeJS & sinopia.
