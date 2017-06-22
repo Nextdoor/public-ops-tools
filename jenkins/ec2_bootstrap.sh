@@ -338,6 +338,7 @@ Pin: origin packagecloud.io
 Pin-Priority: 1002
 EOF
     apt-add-repository ppa:git-core/ppa
+    add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
     apt-get update
 }
 
