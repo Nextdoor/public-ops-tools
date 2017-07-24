@@ -50,7 +50,8 @@ DEFAULT_PACKAGES="
   git
   jq
   parallel
-  zip"
+  zip
+  openntpd"
 
 OPENJDK_DEFAULT="openjdk-8-jdk"
 OPENJDK_FAILOVER="openjdk-7-jdk"
@@ -551,6 +552,8 @@ function main() {
     install_phab_utils
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
     sudo service postgresql stop || true
+    # force an ntpd clock sync
+    ntpd -s || true
 }
 
 main $*
