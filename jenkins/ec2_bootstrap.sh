@@ -45,7 +45,6 @@ update-repo() {
 # that are needed to fulfill a particular host type's role should
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
-  aws
   php5
   php5-curl
   git
@@ -512,6 +511,10 @@ install_docker_tools() {
     chmod +x /usr/local/bin/docker-compose
 }
 
+install_aws_cli() {
+    pip install aws
+}
+
 function main() {
     # Exit on any failure.
     set -e
@@ -551,6 +554,7 @@ function main() {
     install_pip
     install_docker_tools
     install_phab_utils
+    install_aws_cli
     if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
     sudo service postgresql stop || true
     # force an ntpd clock sync
