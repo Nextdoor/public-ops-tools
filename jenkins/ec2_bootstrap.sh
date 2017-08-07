@@ -45,6 +45,7 @@ update-repo() {
 # that are needed to fulfill a particular host type's role should
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
+  aws
   php5
   php5-curl
   git
