@@ -346,6 +346,11 @@ install_packages() {
   apt-get -y --force-yes -q install $*
 }
 
+install_jdk() {
+  echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
+  install_packages oracle-java8-installer
+}
+
 install_ruby() {
   # Install gpg key for rvm
   su -l ubuntu -c bash -c "gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3"
@@ -543,7 +548,7 @@ function main() {
     prep_for_jenkins
     create_apt_sources
     install_packages $DEFAULT_PACKAGES
-    install_packages oracle-java8-installer
+    install_jdk
     install_packages $DEBIAN_BUILD_PACKAGES
     install_ruby
     install_docker
