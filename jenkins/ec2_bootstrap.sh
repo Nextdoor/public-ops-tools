@@ -53,9 +53,6 @@ DEFAULT_PACKAGES="
   zip
   openntpd"
 
-OPENJDK_DEFAULT="openjdk-8-jdk"
-OPENJDK_FAILOVER="openjdk-7-jdk"
-
 # Tools for building .deb archives.
 DEBIAN_BUILD_PACKAGES="
   debhelper
@@ -340,6 +337,7 @@ Pin-Priority: 1002
 EOF
     apt-add-repository ppa:git-core/ppa
     add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
+    add-apt-repository ppa:webupd8team/java -y
     apt-get update
 }
 
@@ -545,7 +543,7 @@ function main() {
     prep_for_jenkins
     create_apt_sources
     install_packages $DEFAULT_PACKAGES
-    install_packages $OPENJDK_DEFAULT || install_packages $OPENJDK_FAILOVER
+    install_packages oracle-java8-installer
     install_packages $DEBIAN_BUILD_PACKAGES
     install_ruby
     install_docker
