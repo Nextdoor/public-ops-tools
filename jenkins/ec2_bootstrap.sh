@@ -499,7 +499,7 @@ service { 'puppet':
 }
 
 install_pip() {
-    apt-get install -y python-pip python-dev build-essential python-virtualenv
+    apt-get install -y python-pip python-dev build-essential python-virtualenv python3.4-venv
 }
 
 install_phab_utils() {
