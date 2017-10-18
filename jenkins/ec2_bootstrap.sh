@@ -337,7 +337,6 @@ Pin-Priority: 1002
 EOF
     apt-add-repository ppa:git-core/ppa
     add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
-    add-apt-repository ppa:webupd8team/java -y
     apt-get update
 }
 
@@ -347,8 +346,7 @@ install_packages() {
 }
 
 install_jdk() {
-  echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
-  install_packages oracle-java8-installer
+  install_packages openjdk-9-jdk-headless
 }
 
 install_ruby() {
