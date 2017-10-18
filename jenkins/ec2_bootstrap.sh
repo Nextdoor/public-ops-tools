@@ -346,7 +346,12 @@ install_packages() {
 }
 
 install_jdk() {
-  install_packages openjdk-9-jdk-headless
+    wget --continue --no-check-certificate -O /tmp/jdk8.tar.gz --header "Cookie: oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u152-b16/aa0333dd3019491ca4f6ddbe78cdb6d0/jdk-8u152-linux-x64.tar.gz
+    cd /tmp
+    tar xfz jdk8.tar.gz
+    mv jdk1.8.0_152 /usr/local/java
+    echo 'export JAVA_HOME=/usr/local/java' >> /home/ubuntu/.bash_profile
+    echo 'export PATH=$PATH:$JAVA_HOME/bin' >> /home/ubuntu/.bash_profile
 }
 
 install_ruby() {
