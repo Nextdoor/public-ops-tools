@@ -352,6 +352,8 @@ install_jdk() {
     mv jdk1.8.0_152 /usr/local/java
     echo 'export JAVA_HOME=/usr/local/java' >> /home/ubuntu/.bash_profile
     echo 'export PATH=$PATH:$JAVA_HOME/bin' >> /home/ubuntu/.bash_profile
+    export JAVA_HOME=/usr/local/java
+    export PATH=$PATH:$JAVA_HOME/bin
 }
 
 install_ruby() {
