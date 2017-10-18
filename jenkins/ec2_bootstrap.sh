@@ -447,11 +447,12 @@ EOF
   	-d \
 	--restart="unless-stopped" \
   	meltwater/docker-cleanup:latest
-  # Cleanup all nextdoor_app images after 30th every Sunday
+  # Cleanup all nextdoor_app images after 30th every Sunday.
   echo "0 17 * * sun docker images -a | grep nextdoor_app | tail -n +30 | awk '{ print \$3 }' | xargs docker rmi -f" | crontab
-  # Cleanup /tmp/pip-* older than an hour every hour
+  # Cleanup /tmp/pip-* older than an hour every hour.
   (crontab -l ; echo "0 * * * * find /tmp -name 'pip-*' -mmin +60 | xargs sudo rm -rf") | crontab -
-
+  # Cleanup any tmp files in /home/ubuntu older than a half hour every half hour.
+  (crontab -l ; echo "*/30 * * * * find /home/ubuntu/ -maxdepth 2 -name 'tmp.*' -mmin +30 | xargs sudo rm -rf") | crontab -
 }
 
 prepare_cowbuilder() {
