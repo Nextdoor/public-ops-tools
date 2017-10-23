@@ -18,11 +18,6 @@
 #   GITHUB="https://raw.githubusercontent.com/Nextdoor/public-ops-tools/master/"
 #   BOOTSCRIPT="${GITHUB}/jenkins/ec2_bootstrap.sh"
 #   curl -q --insecure $BOOTSCRIPT | sudo -E /bin/bash
-#
-# == Authors
-#
-# Matt Wise <matt@nextdoor.com>
-# Chuck Karish <chuck@nextdoor.com>
 
 # Discover what version of the OS we're running so we can set variables based on that.
 source /etc/lsb-release
@@ -335,7 +330,8 @@ Package: *
 Pin: origin packagecloud.io
 Pin-Priority: 1002
 EOF
-    apt-add-repository ppa:git-core/ppa
+    add-apt-repository ppa:git-core/ppa
+    add-apt-repository ppa:jonathonf/python-3.6
     add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
     apt-get update
 }
@@ -503,8 +499,8 @@ service { 'puppet':
     fi
 }
 
-install_pip() {
-    apt-get install -y python-pip python-dev build-essential python-virtualenv python3.4-venv
+install_python() {
+    apt-get install -y python-pip python-dev build-essential python-virtualenv python-3.6
 }
 
 install_phab_utils() {
@@ -559,7 +555,7 @@ function main() {
     install_docker
     install_datadog_agent
     install_npm_proxy_cache
-    install_pip
+    install_python
     install_docker_tools
     install_phab_utils
     install_aws_cli
