@@ -239,7 +239,7 @@ raid_ephemeral_storage() {
   done
 
   partprobe || true
-  mdadm --create -v /dev/md0 --level=0 --chunk=256 --raid-devices=$ephemeral_count $drives ||
+  mdadm --create --force -v /dev/md0 --level=0 --chunk=256 --raid-devices=$ephemeral_count $drives ||
     true
   echo DEVICE $drives | tee /etc/mdadm.conf
   mdadm --detail --scan |
