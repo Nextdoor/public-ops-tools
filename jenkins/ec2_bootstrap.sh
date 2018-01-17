@@ -349,7 +349,7 @@ install_jdk() {
     wget --continue --no-check-certificate -O /tmp/jdk8.tar.gz --header "Cookie: oraclelicense=a" 'https://edelivery.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz'
     cd /tmp
     tar xfz jdk8.tar.gz
-    mv jdk1.8.0_152 /usr/local/java
+    mv jdk1.8.0_161 /usr/local/java
     echo 'export JAVA_HOME=/usr/local/java' >> /home/ubuntu/.bash_profile
     echo 'export PATH=$PATH:$JAVA_HOME/bin' >> /home/ubuntu/.bash_profile
     update-alternatives --install /usr/bin/java java /usr/local/java/bin/java 1081
