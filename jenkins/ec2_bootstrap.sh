@@ -346,7 +346,7 @@ install_packages() {
 }
 
 install_jdk() {
-    wget --continue --no-check-certificate -O /tmp/jdk8.tar.gz --header "Cookie: oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u152-b16/aa0333dd3019491ca4f6ddbe78cdb6d0/jdk-8u152-linux-x64.tar.gz
+    wget --continue --no-check-certificate -O /tmp/jdk8.tar.gz --header "Cookie: oraclelicense=a" 'https://edelivery.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz'
     cd /tmp
     tar xfz jdk8.tar.gz
     mv jdk1.8.0_152 /usr/local/java
