@@ -443,7 +443,7 @@ EOF
   for i in 1 2 3 4 5; do docker ps && break || sleep 5; done
   
   docker run \
-        -e KEEP_IMAGES="hub.corp.nextdoor.com/dev-tools/nextdoor_db_9_4 hub.corp.nextdoor.com/dev-tools/atlas hub.corp.nextdoor.com/dev-tools/jenkins-nextdoor-unit-tests hub.corp.nextdoor.com/nextdoor/gnarfeed" \
+        -e KEEP_IMAGES="hub.corp.nextdoor.com/dev-tools/nextdoor_db_9_4 hub.corp.nextdoor.com/dev-tools/atlas hub.corp.nextdoor.com/nextdoor/gnarfeed" \
   	-v /var/run/docker.sock:/var/run/docker.sock:rw \
   	-v /var/lib/docker:/var/lib/docker:rw \
   	-d \
