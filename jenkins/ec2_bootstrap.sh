@@ -487,7 +487,7 @@ install_datadog_agent() {
 	update-repo puppetlabs-pc1.list
 	apt-get install -y puppet-agent
 	PATH=/opt/puppetlabs/puppet/bin:$PATH
-	puppet module install datadog/datadog_agent
+	puppet module install datadog/datadog_agent --version 1.12.1
 	puppet apply --verbose -e "
 
 class { '::datadog_agent': 
@@ -559,7 +559,7 @@ function main() {
     install_packages $DEBIAN_BUILD_PACKAGES
     install_ruby
     install_docker
-    # install_datadog_agent
+    install_datadog_agent
     install_npm_proxy_cache
     install_pip
     install_docker_tools
