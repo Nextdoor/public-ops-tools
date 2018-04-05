@@ -337,6 +337,7 @@ Pin-Priority: 1002
 EOF
     apt-add-repository ppa:git-core/ppa
     add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
+    add-apt-repository ppa:jonathonf/python-2.7
     apt-get update
 }
 
@@ -507,6 +508,7 @@ service { 'puppet':
 
 install_pip() {
     apt-get install -y python-pip python-dev build-essential python-virtualenv python3.4-venv
+    apt-get install -y python2.7
 }
 
 install_phab_utils() {
