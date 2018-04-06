@@ -352,6 +352,7 @@ install_jdk() {
     fi
     cd /tmp
     tar xfz jdk8.tar.gz
+    rm -rf /usr/local/java/jdk1.8.0_161
     mv jdk1.8.0_161 /usr/local/java
     echo 'export JAVA_HOME=/usr/local/java' >> /home/ubuntu/.bash_profile
     echo 'export PATH=$PATH:$JAVA_HOME/bin' >> /home/ubuntu/.bash_profile
@@ -513,6 +514,7 @@ install_pip() {
 
 install_phab_utils() {
     mkdir -p /var/jenkins
+    rm -rf /var/jenkins/arcanist /var/jenkins/libphutil
     git clone https://github.com/Nextdoor/arcanist.git /var/jenkins/arcanist
     git clone https://github.com/phacility/libphutil.git /var/jenkins/libphutil
 }
@@ -567,7 +569,7 @@ function main() {
     install_docker_tools
     install_phab_utils
     install_aws_cli
-    if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
+    # if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
     sudo service postgresql stop || true
     # force an ntpd clock sync
     ntpd -s || true
