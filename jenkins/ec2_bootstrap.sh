@@ -457,6 +457,8 @@ EOF
   (crontab -l ; echo "0 * * * * find /tmp -name 'pip-*' -mmin +60 | xargs sudo rm -rf") | crontab -
   # Cleanup any tmp files in /home/ubuntu older than a half hour every half hour.
   (crontab -l ; echo "*/30 * * * * find /home/ubuntu/ -maxdepth 2 -name 'tmp.*' -mmin +30 | xargs sudo rm -rf") | crontab -
+  # Cleanup all the build cache files older than an hour every hour.
+  (crontab -l ; echo "0 * * * * find /mnt/tmp/.nextdoor-docker-cache/ -name 'tmp.*' -mmin +60 | xargs sudo rm -rf") | crontab -l
 }
 
 prepare_cowbuilder() {
