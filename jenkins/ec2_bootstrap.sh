@@ -362,7 +362,7 @@ install_jdk() {
 install_ruby() {
   # Install gpg key for rvm
   su -l ubuntu -c bash -c "gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3"
-  su -l ubuntu -c bash -c "gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3"
+  su -l ubuntu -c bash -c "command curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
 
   # Set up Ruby, but explicitly uninstall RVM. This lets Jenkins handle the install
   # of RVM. If the package doesn't exist, we don't care if the uninstall fails.
