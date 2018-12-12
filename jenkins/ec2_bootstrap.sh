@@ -382,6 +382,7 @@ install_ruby() {
       ruby
       $RUBYGEM
       bison
+      gnupg2
       libffi-dev
       libgdbm-dev
       libssl-dev
