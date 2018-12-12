@@ -361,8 +361,7 @@ install_jdk() {
 
 install_ruby() {
   # Install gpg key for rvm
-  su -l ubuntu -c bash -c "gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3"
-  su -l ubuntu -c bash -c "command curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
+  su -l ubuntu -c bash -c "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
 
   # Set up Ruby, but explicitly uninstall RVM. This lets Jenkins handle the install
   # of RVM. If the package doesn't exist, we don't care if the uninstall fails.
@@ -391,7 +390,7 @@ install_ruby() {
   install_packages $RUBY_PACKAGES
 
   # Su back to the Ubuntu user and install RVM under it
-  su -l ubuntu -c bash -c "curl -sSL https://raw.githubusercontent.com/wayneeseguin/rvm/stable/binscripts/rvm-installer | bash -s stable --ruby"
+  su -l ubuntu -c bash -c "\curl -sSL https://get.rvm.io | bash -s stable"
 }
 
 # Use nodesource repos to install NodeJS & sinopia.
