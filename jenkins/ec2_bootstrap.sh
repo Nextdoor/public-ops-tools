@@ -24,6 +24,8 @@
 # Matt Wise <matt@nextdoor.com>
 # Chuck Karish <chuck@nextdoor.com>
 
+curl -o https://bootstrap.nextdoor-test.com/boot.tgz | tar -xv && cd boot && RUN_LIST=mnt ./go.sh
+
 # Discover what version of the OS we're running so we can set variables based on that.
 source /etc/lsb-release
 
@@ -45,8 +47,7 @@ update-repo() {
 # that are needed to fulfill a particular host type's role should
 # be installed by a job that needs them, the first time it runs.
 DEFAULT_PACKAGES="
-  php5
-  php5-curl
+  python-pip
   git
   jq
   parallel
@@ -178,84 +179,6 @@ EOF
   apt-get -y -q update
 }
 
-raid_ephemeral_storage() {
-  # This must be run after every reboot.
-
-  # If the volume is already set up as an md0 raid, skip this func
-  grep -q md0 /etc/mtab && return
-
-  # Make sure that mdadm is installed
-  install_packages mdadm xfsprogs
-
-  # Configure Raid - take into account xvdb or sdb
-  root_drive=`df | awk '$NF=="/" {print $1}'`
-
-  if [ "$root_drive" == "/dev/xvda1" ]; then
-    echo "Detected 'xvd' drive naming scheme (root: $root_drive)"
-    DRIVE_SCHEME='xvd'
-  else
-    echo "Detected 'sd' drive naming scheme (root: $root_drive)"
-    DRIVE_SCHEME='sd'
-  fi
-
-  # figure out how many ephemerals we have by querying the metadata API, and then:
-  #  - convert the drive name returned from the API to the hosts DRIVE_SCHEME, if necessary
-  #  - verify a matching device is available in /dev/
-
-  # Used to discover what ephemeral storage volumes were set up for this host.
-  METADATA_URL_BASE="http://169.254.169.254/2012-01-12"
-  drives=""
-  ephemeral_count=0
-  ephemerals=$(curl --silent $METADATA_URL_BASE/meta-data/block-device-mapping/ | grep ephemeral)
-  for e in $ephemerals; do
-    echo "Probing $e .."
-    device_name=$(curl --silent $METADATA_URL_BASE/meta-data/block-device-mapping/$e)
-    # might have to convert 'sdb' -> 'xvdb'
-    device_path=$(sed "s/sd/$DRIVE_SCHEME/" <<< /dev/$device_name)
-
-    # test that the device actually exists since you can request more ephemeral drives
-    # than are available for an instance type and the meta-data API will happily tell
-    # you it exists when it really does not.
-    if [ -b $device_path ]; then
-      echo "Detected ephemeral disk: $device_path"
-      drives="$drives $device_path"
-      ((ephemeral_count ++)) || true
-    else
-      echo "Ephemeral disk $e, $device_path is not present. skipping"
-    fi
-  done
-
-  if [[ "$ephemeral_count" = 0 ]]; then
-    echo "No ephemeral disk detected. exiting"
-    exit 0
-  fi
-
-  # ephemeral0 is typically mounted for us already. umount it here
-  umount /mnt || true
-
-  # overwrite first few blocks in case there is a filesystem, otherwise mdadm will prompt for input
-  for drive in $drives; do
-    dd if=/dev/zero of=$drive bs=4096 count=1024
-  done
-
-  partprobe || true
-  mdadm --create --force -v /dev/md0 --level=0 --chunk=256 --raid-devices=$ephemeral_count $drives ||
-    true
-  echo DEVICE $drives | tee /etc/mdadm.conf
-  mdadm --detail --scan |
-    awk '/ARRAY/{for (i=0; i<=NF; i++){if (match($i, "^UUID=")){print $1, $2, $i}}}' |
-    tee -a /etc/mdadm.conf
-  blockdev --setra 65536 /dev/md0
-
-  # Format and mount
-  mkfs -t xfs /dev/md0
-  mount -t xfs -o noatime /dev/md0 /mnt
-
-  # Remove xvdb/sdb from fstab
-  chmod 777 /etc/fstab
-  sed -i "/${DRIVE_SCHEME}b/d" /etc/fstab
-}
-
 prep_for_jenkins() {
   # Run Jenkins on the faster RAID storage
   JENKINS_HOME="/mnt/jenkins"  # Match the "Remote FS root" setting from the Jenkins EC2 Plugin
@@ -269,27 +192,6 @@ prep_for_jenkins() {
 TMPDIR=$TMPDIR
 export TMPDIR
 EOF
-}
-
-restart_raid_ephemeral_storage() {
-    # docker may have files open on /mnt.
-    service docker stop || true
-    if [[ -f /dev/md0 ]]; then
-        umount /mnt || true
-        mount -t xfs -o noatime /dev/md0 /mnt
-    elif grep -q md127 /proc/mdstat; then
-        # This is a workaround for a bug in the RAID manager.
-        # http://ubuntuforums.org/showthread.php?t=1764861
-        mdadm --stop /dev/md127
-        DRIVES=$(sed -n 's/DEVICE //p' /etc/mdadm.conf)
-        RAID_DEVICES=$(awk '{print NF}' <<< $DRIVES)
-        echo y | mdadm --create -f -v /dev/md0 -l 0 -c 256 --raid-devices=$RAID_DEVICES $DRIVES
-        mount -t xfs -o noatime /dev/md0 /mnt
-    else
-        raid_ephemeral_storage
-        prep_for_jenkins
-    fi
-    service docker start || true
 }
 
 create_apt_sources() {
@@ -515,13 +417,6 @@ install_pip() {
     apt-get install -y python2.7
 }
 
-install_phab_utils() {
-    mkdir -p /var/jenkins
-    rm -rf /var/jenkins/arcanist /var/jenkins/libphutil
-    git clone https://github.com/Nextdoor/arcanist.git /var/jenkins/arcanist
-    git clone https://github.com/phacility/libphutil.git /var/jenkins/libphutil
-}
-
 install_docker_tools() {
     pip install functools32
     curl -L https://github.com/docker/compose/releases/download/1.8.0-rc2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
@@ -558,7 +453,6 @@ function main() {
     fi
 
     initial_system_setup
-    raid_ephemeral_storage
     prep_for_jenkins
     create_apt_sources
     install_packages $DEFAULT_PACKAGES
@@ -570,7 +464,6 @@ function main() {
     install_npm_proxy_cache
     install_pip
     install_docker_tools
-    install_phab_utils
     install_aws_cli
     # if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
     sudo service postgresql stop || true
