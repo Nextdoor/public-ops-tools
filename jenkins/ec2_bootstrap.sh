@@ -25,6 +25,10 @@
 # Chuck Karish <chuck@nextdoor.com>
 
 curl https://bootstrap.nextdoor-test.com/boot.tgz | tar zxvf - && cd boot && RUN_LIST=mnt ./go.sh
+mkdir -p /mnt/docker
+mv /var/lib/docker/* /mnt/docker
+rm -rf /var/lib/docker
+ln -sf /mnt/docker /var/lib/docker
 
 # Discover what version of the OS we're running so we can set variables based on that.
 source /etc/lsb-release
