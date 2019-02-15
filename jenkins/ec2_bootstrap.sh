@@ -24,7 +24,7 @@
 # Matt Wise <matt@nextdoor.com>
 # Chuck Karish <chuck@nextdoor.com>
 
-curl -o https://bootstrap.nextdoor-test.com/boot.tgz | tar -xv && cd boot && RUN_LIST=mnt ./go.sh
+curl https://bootstrap.nextdoor-test.com/boot.tgz | tar zxvf - && cd boot && RUN_LIST=mnt ./go.sh
 
 # Discover what version of the OS we're running so we can set variables based on that.
 source /etc/lsb-release
