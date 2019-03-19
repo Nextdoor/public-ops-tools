@@ -320,14 +320,6 @@ install_docker() {
        $(lsb_release -cs) \
        stable"
 
-
-  # Enable the much more tested and reliable filesystem driver AUFS
-  # https://groups.google.com/forum/#!topic/docker-user/Tpi5m1I9dGU
-  #
-  # (Note: Our Puppet module already does this, so this is
-  # just mimicking production)
-  install_packages linux-image-extra-$(uname -r)
-
   apt-get install docker-ce docker-ce-cli containerd.io
 
   # Install docker
