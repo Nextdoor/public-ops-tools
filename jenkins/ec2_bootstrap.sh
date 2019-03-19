@@ -309,8 +309,6 @@ install_docker() {
        $(lsb_release -cs) \
        stable"
 
-  apt-get install docker-ce docker-ce-cli containerd.io
-
   # Install docker
   apt-get update
   install_packages docker-ce docker-ce-cli containerd.io
