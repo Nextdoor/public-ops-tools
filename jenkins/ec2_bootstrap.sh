@@ -300,17 +300,6 @@ install_ruby() {
   su -l ubuntu -c bash -c "\curl -sSL https://get.rvm.io | bash -s stable"
 }
 
-# Use nodesource repos to install NodeJS & sinopia.
-install_npm_proxy_cache() {
-  # Ugh - but this is the way we install Node elsewhere.
-  curl -sL https://deb.nodesource.com/setup_6.x | bash -
-  apt-get install -y nodejs
-  # Install sinopia globally and set up a boot-time service
-  npm install -g forever forever-service sinopia
-  mkdir -p /mnt/sinopia
-  forever-service install --start --script /usr/bin/sinopia -f ' --workingDir /mnt/' sinopia
-}
-
 install_docker() {
   # Add the repository to your APT sources
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -460,7 +449,6 @@ function main() {
     install_ruby
     install_docker
     install_datadog_agent
-    install_npm_proxy_cache
     install_pip
     install_docker_tools
     install_aws_cli
