@@ -313,11 +313,13 @@ install_npm_proxy_cache() {
 
 install_docker() {
   # Add the repository to your APT sources
-  echo deb https://apt.dockerproject.org/repo ubuntu-precise main > /etc/apt/sources.list.d/docker.list
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-  # Then import the repository key
-  set +e
-  apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+  add-apt-repository \
+       "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+       $(lsb_release -cs) \
+       stable"
+
 
   # Enable the much more tested and reliable filesystem driver AUFS
   # https://groups.google.com/forum/#!topic/docker-user/Tpi5m1I9dGU
@@ -326,10 +328,11 @@ install_docker() {
   # just mimicking production)
   install_packages linux-image-extra-$(uname -r)
 
+  apt-get install docker-ce docker-ce-cli containerd.io
+
   # Install docker
-  update-repo docker.list
-  apt-get purge lxc-docker
-  install_packages docker-engine  # =1.11.2-0~precise
+  apt-get update
+  install_packages docker-ce docker-ce-cli containerd.io
 
   # Ensure that Docker uses /mnt/docker for storage (so it doesn't fill up the
   # root volume). Also ensure that the docker socket file is owned by the
@@ -352,12 +355,12 @@ EOF
   for i in 1 2 3 4 5; do docker ps && break || sleep 5; done
   
   docker run \
-        -e KEEP_IMAGES="hub.corp.nextdoor.com/dev-tools/nextdoor_db_9_4 hub.corp.nextdoor.com/dev-tools/atlas hub.corp.nextdoor.com/nextdoor/gnarfeed" \
-  	-v /var/run/docker.sock:/var/run/docker.sock:rw \
-  	-v /var/lib/docker:/var/lib/docker:rw \
-  	-d \
-	--restart="unless-stopped" \
-  	meltwater/docker-cleanup:latest
+    -e KEEP_IMAGES="hub.corp.nextdoor.com/dev-tools/nextdoor_db_9_4 hub.corp.nextdoor.com/dev-tools/atlas hub.corp.nextdoor.com/nextdoor/gnarfeed" \
+    -v /var/run/docker.sock:/var/run/docker.sock:rw \
+    -v /var/lib/docker:/var/lib/docker:rw \
+    -d \
+    --restart="unless-stopped" \
+    meltwater/docker-cleanup:latest
   # Cleanup all nextdoor_app images after 30th every Sunday.
   echo "0 17 * * sun docker images -a | grep nextdoor_app | tail -n +30 | awk '{ print \$3 }' | xargs docker rmi -f" | crontab
   # Cleanup /tmp/pip-* older than an hour every hour.
@@ -423,7 +426,7 @@ install_pip() {
 
 install_docker_tools() {
     pip install functools32
-    curl -L https://github.com/docker/compose/releases/download/1.8.0-rc2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+    curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
 }
 
