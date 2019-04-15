@@ -56,7 +56,8 @@ DEFAULT_PACKAGES="
   jq
   parallel
   zip
-  openntpd"
+  openntpd
+  moreutils"
 
 # Tools for building .deb archives.
 DEBIAN_BUILD_PACKAGES="
