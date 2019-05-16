@@ -373,14 +373,14 @@ install_datadog_agent() {
 	echo "Optional envvar DATADOG_AGENT_API_KEY does not exist."
     else
 	# PC1 == Puppet Collection 1 == most stable for this platform
-	PUPPET_REPO_URI='https://apt.puppetlabs.com/puppetlabs-release-pc1-precise.deb'
+	PUPPET_REPO_URI='https://apt.puppetlabs.com/puppet-release-trusty.deb'
 	(cd /tmp &&
 	  wget --no-check-certificate "${PUPPET_REPO_URI}" &&
-	  dpkg -i puppetlabs*.deb)
+	  dpkg -i puppet*.deb)
 
 	set -e
 	
-	update-repo puppetlabs-pc1.list
+	update-repo puppet.list
 	apt-get install -y puppet-agent
 	PATH=/opt/puppetlabs/puppet/bin:$PATH
 	puppet module install datadog/datadog_agent --version 1.12.1
