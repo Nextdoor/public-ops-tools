@@ -236,15 +236,15 @@ EOF
     update-repo packagecloud.list
 
     # Configure apt pinning
-    cat > /etc/apt/preferences.d/packagecloud.pref <<EOF
-Explanation: repos: packagecloud
-Package: *
-Pin: origin packagecloud.io
-Pin-Priority: 1002
-EOF
-    apt-add-repository ppa:git-core/ppa
-    add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
-    add-apt-repository ppa:jonathonf/python-2.7
+#    cat > /etc/apt/preferences.d/packagecloud.pref <<EOF
+#Explanation: repos: packagecloud
+#Package: *
+#Pin: origin packagecloud.io
+#Pin-Priority: 1002
+#EOF
+#    apt-add-repository ppa:git-core/ppa
+#    add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
+#    add-apt-repository ppa:jonathonf/python-2.7
     apt-get update
 }
 
@@ -403,7 +403,7 @@ service { 'puppet':
 
 install_pip() {
     apt-get install -y python-dev build-essential python-virtualenv python3.5-venv
-    apt-get install -y python2.7
+    #apt-get install -y python2.7
 }
 
 install_docker_tools() {
