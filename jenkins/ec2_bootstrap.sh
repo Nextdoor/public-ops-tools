@@ -389,7 +389,7 @@ install_datadog_agent() {
 class { '::datadog_agent': 
   api_key => '${DATADOG_AGENT_API_KEY}',
   agent_version => '1:7.16.0-1',
-  local_tags => ['devtools_group:ci', 'devtools_ci:jenkins'],
+  tags => ['devtools_group:ci', 'devtools_ci:jenkins'],
 } ->
 
 service { 'puppet':
