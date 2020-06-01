@@ -383,14 +383,13 @@ install_datadog_agent() {
 	update-repo puppet.list
 	apt-get install -y puppet-agent
 	PATH=/opt/puppetlabs/puppet/bin:$PATH
-	puppet module install datadog/datadog_agent --version 1.12.1
+	puppet module install datadog/datadog_agent --version 3.1.0
 	puppet apply --verbose -e "
 
 class { '::datadog_agent': 
   api_key => '${DATADOG_AGENT_API_KEY}',
-  bind_host => '0.0.0.0',
-  log_level => 'error',
-  tags => ['devtools_group:ci', 'devtools_ci:jenkins'],
+  agent_version => '1:7.16.0-1',
+  local_tags => ['devtools_group:ci', 'devtools_ci:jenkins'],
 } ->
 
 service { 'puppet':
