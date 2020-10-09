@@ -61,6 +61,7 @@ DEFAULT_PACKAGES="
 
 # Tools for building .deb archives.
 DEBIAN_BUILD_PACKAGES="
+  default-jre
   debhelper
   quilt"
 
