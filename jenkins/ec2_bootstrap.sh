@@ -64,110 +64,6 @@ DEBIAN_BUILD_PACKAGES="
   debhelper
   quilt"
 
-install_nextdoor_gpg_key() {
-    cat << EOF | apt-key add -
------BEGIN PGP PUBLIC KEY BLOCK-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-mQENBE75JiUBCACakhf2Hr0nJRJcomZrZO9syWb+dN6efmSb7rYQ7KjfIhTlr5CK
-lGl1OdY3/94DuPIc6taxYITXqerwXA81Y22P9gbfYboMorqsekxl2Gc5UMLAAAzw
-OLtm0Lo2ddgSdGqk1GfNAzFhvUbtM7RHiu8/WmnLb91mguOLkyNadAbrkhYSjoTI
-ps5IbaX/ac9TpernlJYXoUGwSf0QBaLTkfeuVMapG7ipeb9ZAZwoyICf6U89s27U
-IWCZ7oIVisnsdsSAL9b+PSBNIT1EVHaTSSCic4nrVpa9CS8G2HaXFu4zBABIBH+M
-Qodz+Tbpc/pogvsN4OnhMj+IUmBGPVxHizMjABEBAAG0G05leHRkb29yIDxlbmdA
-bmV4dGRvb3IuY29tPokBOAQTAQIAIgUCTvkmJQIbAwYLCQgHAwIGFQgCCQoLBBYC
-AwECHgECF4AACgkQkBrmSl5OyNyb5ggAlTtw9/DloMrQczTqrlW0lowTj3naic03
-9VeRC4Yqv1Aai0lRVy31b0IqMV1tybpA//c7trcfCeOqBvWTpwXee0/JAeYryOFd
-qeyC/bpY3StoArnHzJbPxm0kzaWoI+KLAETrvJh+2LvCce3ztazrpmc5nmq/OyHF
-nInvuXNfjaXir6sojfE6c8PsT08MaUbsz/RIynMzoP0CgUPx+DB7JeTYNAUlkw5l
-CeStz8NKPQopUH/Zvo0ug475Qgb3KDKJEmhqq16NkV8Adi/v5hxiW0x0U1uyQ0Mu
-ku3wjAseEReDAwIX3Q2q778keN8d468ZQXobv/dkm42ZqYU8GvQ3E7kBDQRO+SYl
-AQgAlxWOc5/5JX+2mwwoipowIxsTSEP+e+q1hNxIlpbSTx+UPbQ4FibQfyZG/PDZ
-PzG9ZF6VJqKFZ9i6T/1FxDB6IQRPBy/FTHjP9EfCTYEGU6o7fblqj37TUKn3UP39
-PyC2Ab4y205PtKKC95wPiZ0ydfj6Y+0lr8cGxuYnouTYTmLKzgbTdotVivEJahfV
-q8iGglq4U3EXvtBaqlE3C6LL/fSyTvmlXs+qatYiMFRBieQndGo9nX6GxfbLSVHF
-zCAzrZKAEnGEF7tLfq7CEyCnC7DDzgCyVwEDOsj0qcS5TP5HDWdecjqm5kt2VGi9
-0WDq0OMiQ84GXkNgaB9UM8/MMwARAQABiQEfBBgBAgAJBQJO+SYlAhsMAAoJEJAa
-5kpeTsjcElYH/1rah5SQfsHAGCh3U+QC6Fd4mEgOlw/a3nJPdX6hgFE/IDDzeBTf
-M8HgkdFCRG5krofYxF+HaJz0GJewP3L++m+CQwGanADW14Me3ay2pR0g0vcIrdyV
-zXIWOauYD2aRxk/81sCakdrutQlFkgOL/rIyJLSKabla9NKaMmI+oSRxMSogiw4M
-wRfJCmJ68RCYbKo+3qEGRFrJZXMq8nJS5rCHMAZqI5A/ndUdlP1Db49iDdsk5xSP
-Yhv8t1ZhaKJ0Ij3fiDLgvsYf8ZKJbdqYXo3thVSBvlrOtUJF05Cd0p3FdOKJNrka
-3kfk+gQvanFg6Jj0bzTewl4ukEMjA5DcwOM=
-=pggg
------END PGP PUBLIC KEY BLOCK-----
-EOF
-}
-
-install_packagecloud_gpg_key() {
-    cat << EOF | apt-key add -
------BEGIN PGP PUBLIC KEY BLOCK-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-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
-sA==
-=H60S
------END PGP PUBLIC KEY BLOCK-----
-EOF
-}
-
 # Set up a couple of misc system settings...
 initial_system_setup() {
   # Ensure that we can do git clones without strict host key checking
@@ -178,8 +74,6 @@ EOF
   chown ubuntu.ubuntu ~ubuntu/.ssh/config
   apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 40976EAF437D05B5
   apt-key adv --recv-keys --keyserver keyserver.ubuntu.com BAD55AD940BBB133
-  install_nextdoor_gpg_key
-  install_packagecloud_gpg_key
   # Do an Apt-Get update so that later package installs can succeed
   apt-get -y -q update
 }
@@ -214,37 +108,9 @@ EOF
     fi
 
     local HTTPS_SOURCES_LIST=https.sources.list
-    if [[ ! -f $APT_SOURCES_DIR/$HTTPS_SOURCES_LIST ]]; then
-        # Install the Nextdoor public repos
-        cat > $APT_SOURCES_DIR/$HTTPS_SOURCES_LIST << EOF
-deb https://s3.amazonaws.com/cloud.nextdoor.com/repos/precise stable main
-deb https://s3.amazonaws.com/cloud.nextdoor.com/repos/precise unstable main
-EOF
-        update-repo $HTTPS_SOURCES_LIST
-    fi
 
     # Install the apt-transport-s3 driver if it is missing
     dpkg --status apt-transport-s3 > /dev/null || install_packages apt-transport-s3
-
-    # Configure for the Nextdoor apt repo
-    cat > $APT_SOURCES_DIR/packagecloud.list << EOF
-deb https://${PROD_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/any/ any main 
-deb https://${PROD_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/prod/ubuntu/ precise main 
-deb https://${ENG_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/any/ any main 
-deb https://${ENG_PACKAGECLOUD_TOKEN}:@packagecloud.io/nextdoor/staging/ubuntu/ precise main 
-EOF
-    update-repo packagecloud.list
-
-    # Configure apt pinning
-#    cat > /etc/apt/preferences.d/packagecloud.pref <<EOF
-#Explanation: repos: packagecloud
-#Package: *
-#Pin: origin packagecloud.io
-#Pin-Priority: 1002
-#EOF
-#    apt-add-repository ppa:git-core/ppa
-#    add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse"
-#    add-apt-repository ppa:jonathonf/python-2.7
     apt-get update
 }
 
@@ -353,18 +219,6 @@ EOF
   (crontab -l ; echo "*/10 * * * * docker network prune --force --filter until=10m") | crontab -
 }
 
-prepare_cowbuilder() {
-    local BASE="${GITHUB}/jenkins/cowbuilder"
-    local FILES="bootstrap.sh cowbuilderrc finish.sh"
-
-    install_packages cowbuilder
-    cd /tmp
-    for file in $FILES; do
-        curl --silent --insecure -O ${BASE}/${file}
-    done
-    /bin/bash ./bootstrap.sh
-}
-
 install_datadog_agent() {
     # Install the Datadog agent. The agent requires an API key which is expected
     # to be present in the shell environment as DATADOG_AGENT_API_KEY. If the
@@ -452,7 +306,6 @@ function main() {
     install_pip
     install_docker_tools
     install_aws_cli
-    # if [[ -n "$PREPARE_COWBUILDER" ]]; then prepare_cowbuilder; fi
     sudo service postgresql stop || true
     # force an ntpd clock sync
     ntpd -s || true
